@@ -1,0 +1,27 @@
+{
+  "name": "NAVI | Co-Piloto Pessoal",
+  "short_name": "NAVI",
+  "description": "IA de visão computacional local para foco, rotina e saúde mental. Adaptativo, privado e instalável.",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050a14",
+  "theme_color": "#00f0ff",
+  "categories": ["productivity", "lifestyle", "education"],
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "logo-512.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

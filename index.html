@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NAVI | Co-Piloto Pessoal</title>
+    
+    <!-- Favicon (Ícone na Aba do Navegador/Google) -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="logo-512.png">
+    
+    <!-- Meta Tags para PWA (App Instalável) -->
+    <meta name="theme-color" content="#050a14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NAVI">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Open Graph (Imagem quando compartilha no Google/WhatsApp/Redes Sociais) -->
+    <meta property="og:image" content="capa-projeto.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:title" content="NAVI | AI-Powered Personal Co-Pilot">
+    <meta property="og:description" content="IA de visão computacional local para foco, rotina e saúde mental.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://seu-usuario.github.io/navi-ai-copilot/">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NAVI | AI-Powered Personal Co-Pilot">
+    <meta name="twitter:description" content="IA de visão computacional local para foco, rotina e saúde mental.">
+    <meta name="twitter:image" content="capa-projeto.png">
+    
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Cérebro da IA Leve e Estável para Celular -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0"></script>
+</head>
+<body>
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- Botão MAYDAY -->
+    <div class="mayday-btn" onclick="triggerMayday()">🚨 MAYDAY</div>
+
+    <!-- Overlay MAYDAY -->
+    <div id="mayday-overlay" class="overlay hidden">
+        <div class="mayday-content">
+            <h1>🚨 MODO EMERGÊNCIA</h1>
+            <p>Pouse o avião. Respire.</p>            <div class="grounding-steps">
+                <p>👁️ Nomeie 3 coisas que você vê.</p>
+                <p>✋ Nomeie 2 coisas que você toca.</p>
+                <p> Nomeie 1 coisa que você ouve.</p>
+            </div>
+            <button class="btn-action" onclick="closeMayday()">Estou bem. Voltar à cabine.</button>
+        </div>
+    </div>
+
+    <!-- Modal de Perfil com IA -->
+    <div id="profile-modal" class="overlay">
+        <div class="modal-content">
+            <h2> Registro do Comandante</h2>
+            <input type="text" id="inputName" placeholder="Nome (ex: Felipe)">
+            <input type="number" id="inputAge" placeholder="Idade (ex: 14)">
+            
+            <p style="font-size: 0.8rem; color: var(--hud-primary); margin: 15px 0 5px;">
+                📸 Escolha uma foto. A IA vai analisá-la e adaptar o app.
+            </p>
+            <input type="file" id="inputImageFile" accept="image/*">
+            
+            <div id="ai-status" style="font-size: 0.8rem; color: var(--hud-accent); margin: 10px 0; min-height: 20px; font-weight: bold;">
+                ⏳ Carregando IA...
+            </div>
+            
+            <button class="btn-action" id="btn-start" onclick="processImageAndStart()" disabled>Analisar com IA e Iniciar</button>
+        </div>
+    </div>
+
+    <!-- Interface Principal -->
+    <div class="cockpit">
+        <header class="hud-header">
+            <div class="status-indicator"><span class="dot green"></span> SISTEMAS ONLINE</div>
+            <div class="user-info-display" id="userInfoDisplay"></div>
+            <div id="greeting" class="greeting-text">Aguardando registro...</div>
+        </header>
+
+        <div class="boarding-pass" id="boardingPass">
+            <div class="bp-header">
+                <span>BOARDING PASS</span>
+                <span class="flight-code">NAVI-V6-PWA</span>
+            </div>
+            <div class="bp-body">
+                <div class="bp-avatar"><img id="bpImg" src="" alt="Avatar"></div>
+                <div class="bp-details">
+                    <h2 id="bpName">NOME</h2>
+                    <p>Idade: <span id="bpAge">--</span></p>
+                    <p>IA Detectou: <span id="ai-detection" style="color: var(--hud-accent); font-weight: bold;">--</span></p>
+                    <div class="stats-row">
+                        <span>✈️ Voo: <b id="bpHours">0</b>h</span>                        <span> Humor: <b id="bpMood">--</b></span>
+                    </div>
+                </div>
+            </div>
+            <div class="bp-footer">
+                <button class="btn-share" onclick="shareProfile()">📲 Compartilhar</button>
+                <button class="btn-share" onclick="checkMood()">😄 Humor</button>
+            </div>
+        </div>
+
+        <main class="dashboard">
+            <button class="module-card" onclick="startMission()"><div class="icon">🗺️</div><h3>Plano de Voo</h3></button>
+            <button class="module-card" onclick="activateCalmMode()"><div class="icon">🌬️</div><h3>Controle de Turbulência</h3></button>
+            <button class="module-card" onclick="showChecklist()"><div class="icon">✅</div><h3>Checklist de Decolagem</h3></button>
+            <button class="module-card" onclick="showLogbook()"><div class="icon">📓</div><h3>Diário de Bordo</h3></button>
+            <button class="module-card voice-btn" onclick="activateVoiceCommand()"><div class="icon">🎙️</div><h3>Torre de Controle</h3></button>
+            <button class="module-card" onclick="editProfile()"><div class="icon">⚙️</div><h3>Editar Perfil</h3></button>
+        </main>
+
+        <div id="action-area" class="action-area hidden"></div>
+
+        <footer class="hud-footer">
+            <p>NAVI v6.0 | MobileNet AI + PWA | Dev: Felipe Madrid</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

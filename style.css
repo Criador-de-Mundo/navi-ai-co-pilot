@@ -1,0 +1,68 @@
+:root {
+    --bg-base: #050a14;
+    --hud-primary: #00f0ff;
+    --hud-accent: #00ff9d;
+    --hud-alert: #ff3366;
+    --hud-gold: #fbbf24;
+    --glass: rgba(5, 10, 20, 0.75);
+    --border: rgba(255, 255, 255, 0.15);
+    --font-main: 'Courier New', monospace;
+}
+
+body.theme-aviator { --hud-primary: #00f0ff; --hud-accent: #ffaa00; --font-main: 'Courier New', monospace; }
+body.theme-artist { --hud-primary: #d4af37; --hud-accent: #ff79c6; --font-main: 'Georgia', serif; }
+body.theme-nature { --hud-primary: #4ade80; --hud-accent: #a7f3d0; --font-main: system-ui, sans-serif; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-main); -webkit-tap-highlight-color: transparent; transition: color 0.6s ease, border-color 0.6s ease, background-color 0.6s ease; }
+
+body { background-color: var(--bg-base); color: var(--hud-primary); min-height: 100vh; display: flex; justify-content: center; overflow-x: hidden; }
+
+#bgCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+
+.cockpit { width: 100%; max-width: 480px; padding: 20px; display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+.mayday-btn { position: fixed; top: 15px; right: 15px; z-index: 100; background: var(--hud-alert); color: #fff; padding: 8px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px var(--hud-alert); animation: pulse-red 2s infinite; }
+@keyframes pulse-red { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 50; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(8px); }
+.hidden { display: none !important; }
+
+.modal-content, .mayday-content { background: var(--glass); border: 1px solid var(--border); padding: 25px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; color: var(--hud-primary); }
+
+input[type="text"], input[type="number"], input[type="file"] { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-family: system-ui; }
+
+.boarding-pass { background: var(--glass); border: 1px solid var(--hud-primary); border-radius: 16px; padding: 20px; margin-bottom: 25px; backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0, 0.5); }
+.bp-header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--hud-accent); margin-bottom: 15px; border-bottom: 1px dashed var(--border); padding-bottom: 10px; }
+.bp-body { display: flex; gap: 15px; align-items: center; }
+.bp-avatar { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--hud-gold); overflow: hidden; background: #000; flex-shrink: 0; }
+.bp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.bp-details h2 { font-size: 1.4rem; color: #fff; margin-bottom: 5px; }
+.bp-details p { font-size: 0.8rem; color: rgba(255,255,255,0.7); margin-bottom: 3px; }
+.stats-row { display: flex; gap: 15px; margin-top: 10px; font-size: 0.9rem; color: var(--hud-primary); }
+.bp-footer { margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; gap: 10px; }
+
+.btn-share { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-family: system-ui; }
+.btn-share:first-child { background: var(--hud-accent); color: #000; }
+.btn-share:last-child { background: rgba(255,255,255,0.1); color: var(--hud-primary); border: 1px solid var(--border); }
+
+.greeting-text { font-size: 0.9rem; color: var(--hud-gold); text-align: center; margin-top: 5px; font-family: system-ui; }
+.dashboard { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.module-card { background: var(--glass); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px); }
+.module-card:active { background: rgba(255,255,255,0.15); transform: scale(0.98); }
+.module-card .icon { font-size: 1.5rem; }
+.module-card h3 { font-size: 1rem; color: #fff; font-family: system-ui; }
+.voice-btn { border-color: var(--hud-accent); }
+.voice-btn.listening { animation: pulse-border 1s infinite; border-color: var(--hud-alert); }
+@keyframes pulse-border { 0% { box-shadow: 0 0 0 0 var(--hud-alert); } 70% { box-shadow: 0 0 0 10px transparent; } }
+
+.action-area { margin-top: 20px; padding: 20px; background: var(--glass); border: 1px solid var(--hud-accent); border-radius: 12px; color: #fff; font-family: system-ui; backdrop-filter: blur(10px); }
+.btn-action { width: 100%; background: var(--hud-accent); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; font-family: system-ui; }
+.btn-close { width: 100%; background: transparent; border: 1px solid var(--hud-alert); color: var(--hud-alert); padding: 10px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-family: system-ui; }
+
+.breathing-circle { width: 100px; height: 100px; margin: 20px auto; border-radius: 50%; border: 2px solid var(--hud-accent); animation: breathe 8s infinite ease-in-out; display: flex; align-items: center; justify-content: center; color: var(--hud-accent); }
+@keyframes breathe { 0%, 100% { transform: scale(0.8); box-shadow: 0 0 10px var(--hud-accent); } 50% { transform: scale(1.2); box-shadow: 0 0 30px var(--hud-accent); } }
+
+.checklist-item { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #fff; cursor: pointer; }
+.checklist-item.checked { text-decoration: line-through; color: rgba(255,255,255,0.5); }
+.log-entry { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--hud-primary); font-size: 0.85rem; }
+.hud-footer { text-align: center; margin-top: 30px; font-size: 0.7rem; color: rgba(255,255,255,0.4); font-family: system-ui; }
