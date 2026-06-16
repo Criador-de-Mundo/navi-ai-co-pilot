@@ -1,5 +1,6 @@
-// NAVI v9.4 - ALWAYS LISTENING & PWA
+// NAVI v9.5 - SCRIPT COMPLETO COM PWA
 
+// --- VARIÁVEIS GLOBAIS ---
 var profile = JSON.parse(localStorage.getItem('navi_profile')) || null;
 var flightHours = parseInt(localStorage.getItem('navi_hours')) || 0;
 var streak = parseInt(localStorage.getItem('navi_streak')) || 0;
@@ -20,7 +21,7 @@ var moodChartInstance = null;
 var wakeLock = null;
 
 var missions = [
-    ' Estudar 3 palavras novas em inglês',
+    '📚 Estudar 3 palavras novas em inglês',
     '💻 Escrever 1 função em JavaScript',
     '🎸 Tocar 1 música completa no violão',
     '💧 Beber 500ml de água e fazer skincare',
@@ -30,10 +31,14 @@ var missions = [
     '✍️ Escrever 3 coisas pelas quais é grato'
 ];
 
+// --- TOAST NOTIFICATIONS ---
 function showToast(message, type) {
     if (!type) type = 'info';
     var container = document.getElementById('toast-container');
-    if (!container) return;
+    if (!container) {
+        console.log('Toast:', message);
+        return;
+    }
     var toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.textContent = message;
@@ -42,15 +47,20 @@ function showToast(message, type) {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 3000);
 }
-
+// --- SPEAK (Text-to-Speech) ---
 function speak(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(text);
-        u.lang = 'pt-BR';        window.speechSynthesis.speak(u);
+        u.lang = 'pt-BR';
+        u.rate = 1.0;
+        u.pitch = 1.0;
+        u.volume = 1.0;
+        window.speechSynthesis.speak(u);
     }
 }
 
+// --- COMPRESSÃO DE IMAGENS ---
 function compressImage(file, maxWidth, maxHeight, quality) {
     return new Promise(function(resolve, reject) {
         var reader = new FileReader();
@@ -79,24 +89,26 @@ function compressImage(file, maxWidth, maxHeight, quality) {
     });
 }
 
+// --- BACKGROUND ---
 function applyBackground() {
     if (profile && profile.backgroundImage) {
         document.body.style.backgroundImage = 'url(' + profile.backgroundImage + ')';
         document.body.style.backgroundSize = 'cover';
         document.body.style.backgroundPosition = 'center';
         document.body.classList.add('has-background');
-    } else {
-        document.body.style.backgroundImage = 'none';
+    } else {        document.body.style.backgroundImage = 'none';
         document.body.classList.remove('has-background');
     }
 }
 
+// --- TEMA ---
 function applyThemeMode() {
     if (isLightMode) document.body.classList.add('light-mode');
     else document.body.classList.remove('light-mode');
     var btn = document.getElementById('themeBtn');
     if (btn) btn.innerText = isLightMode ? '🌙' : '☀️';
 }
+
 function toggleTheme() {
     isLightMode = !isLightMode;
     localStorage.setItem('navi_theme_mode', isLightMode ? 'light' : 'dark');
@@ -104,6 +116,7 @@ function toggleTheme() {
     showToast(isLightMode ? '☀️ Modo claro' : '🌙 Modo escuro', 'info');
 }
 
+// --- FECHAR TODOS OS MODAIS ---
 function closeAllModals() {
     var modals = document.querySelectorAll('.overlay:not(#profile-modal)');
     modals.forEach(function(modal) {
@@ -111,6 +124,7 @@ function closeAllModals() {
     });
 }
 
+// --- MODAIS ---
 function openModal(id) {
     console.log('Abrindo modal:', id);
     closeAllModals();
@@ -127,11 +141,11 @@ function closeModal(id) {
     if (modal) modal.classList.add('hidden');
 }
 
+// --- PWA DETECTION ---
 function updateAppMode() {
     var appModeEl = document.getElementById('appMode');
     if (appModeEl) {
-        appModeEl.innerText = isPWAInstalled ? 'NAVI v9.4 (Instalado)' : 'NAVI v9.4 (Web)';
-    }
+        appModeEl.innerText = isPWAInstalled ? 'NAVI v9.5 (Instalado)' : 'NAVI v9.5 (Web)';    }
 }
 
 function installPWA() {
@@ -145,7 +159,8 @@ function installPWA() {
             deferredPrompt = null;
             dismissInstall();
         });
-    } else {        showToast('📲 Menu > Adicionar à tela inicial', 'info');
+    } else {
+        showToast('📲 Menu > Adicionar à tela inicial', 'info');
     }
 }
 
@@ -155,6 +170,7 @@ function dismissInstall() {
     localStorage.setItem('navi_install_dismissed', 'true');
 }
 
+// --- STREAK ---
 function checkStreak() {
     var today = new Date().toDateString();
     if (lastActiveDate !== today) {
@@ -168,6 +184,7 @@ function checkStreak() {
     }
 }
 
+// --- DASHBOARD ---
 function initDashboard() {
     if (!profile) return;
     var bpName = document.getElementById('bpName');
@@ -177,8 +194,7 @@ function initDashboard() {
     var bpImg = document.getElementById('bpImg');
     var greeting = document.getElementById('greeting');
     var userInfo = document.getElementById('userInfoDisplay');
-    
-    if (bpName) bpName.innerText = profile.name.toUpperCase();
+        if (bpName) bpName.innerText = profile.name.toUpperCase();
     if (bpTitle) bpTitle.innerText = profile.title;
     if (bpHours) bpHours.innerText = flightHours;
     if (bpStreak) bpStreak.innerText = streak;
@@ -189,12 +205,14 @@ function initDashboard() {
     if (userInfo) userInfo.innerText = profile.name + ' | ' + profile.title;
 }
 
+// --- PERFIL ---
 async function processImageAndStart() {
     var name = document.getElementById('inputName').value.trim();
     var title = document.getElementById('inputTitle').value.trim();
     var tone = document.getElementById('inputTone').value;
     var fileInput = document.getElementById('inputImageFile');
-    var bgFileInput = document.getElementById('inputBackgroundFile');    
+    var bgFileInput = document.getElementById('inputBackgroundFile');
+    
     if (!name || !title) {
         showToast('Preencha nome e título!', 'error');
         return;
@@ -225,8 +243,7 @@ async function processImageAndStart() {
         title: title,
         tone: tone,
         image: profileImage,
-        backgroundImage: backgroundImage
-    };
+        backgroundImage: backgroundImage    };
     
     try {
         localStorage.setItem('navi_profile', JSON.stringify(profile));
@@ -243,16 +260,19 @@ async function processImageAndStart() {
     showToast('Perfil criado!', 'success');
 }
 
-function editProfile() {    if (!profile) {
+function editProfile() {
+    if (!profile) {
         showToast('Crie um perfil primeiro!', 'error');
         return;
     }
+    closeAllModals();
     document.getElementById('profile-modal').classList.remove('hidden');
     document.getElementById('inputName').value = profile.name;
     document.getElementById('inputTitle').value = profile.title;
     document.getElementById('inputTone').value = profile.tone;
 }
 
+// --- MISSÃO ---
 function newMission() {
     currentMission = missions[Math.floor(Math.random() * missions.length)];
     var textEl = document.getElementById('missionText');
@@ -272,7 +292,7 @@ function completeMission() {
     speak('Missão cumprida!');
     closeModal('mission-modal');
 }
-
+// --- POMODORO ---
 function updateTimerDisplay() {
     var m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
     var s = (timeLeft % 60).toString().padStart(2, '0');
@@ -292,7 +312,8 @@ function startTimer() {
             localStorage.setItem('navi_hours', flightHours);
             var bpHours = document.getElementById('bpHours');
             if (bpHours) bpHours.innerText = flightHours;
-            showToast('⏱️ Foco concluído! +0.5h', 'success');            speak('Tempo de foco concluído!');
+            showToast('⏱️ Foco concluído! +0.5h', 'success');
+            speak('Tempo de foco concluído!');
             resetTimer();
         }
     }, 1000);
@@ -312,6 +333,7 @@ function resetTimer() {
     showToast('🔄 Resetado', 'info');
 }
 
+// --- SONS AMBIENTE ---
 function playSound(type) {
     stopSound();
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -319,8 +341,7 @@ function playSound(type) {
     var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     var data = buffer.getChannelData(0);
     var lastOut = 0;
-    
-    for (var i = 0; i < bufferSize; i++) {
+        for (var i = 0; i < bufferSize; i++) {
         var white = Math.random() * 2 - 1;
         if (type === 'white') data[i] = white * 0.5;
         else if (type === 'brown') { data[i] = (lastOut + (0.02 * white)) / 1.02; lastOut = data[i]; data[i] *= 3.5; }
@@ -341,7 +362,8 @@ function playSound(type) {
         currentNoiseNode.connect(filter).connect(gain).connect(audioCtx.destination);
     } else {
         currentNoiseNode.connect(gain).connect(audioCtx.destination);
-    }    currentNoiseNode.start();
+    }
+    currentNoiseNode.start();
     showToast('🔊 Som ' + type + ' ativado', 'info');
 }
 
@@ -351,6 +373,7 @@ function stopSound() {
     showToast('🔇 Som desativado', 'info');
 }
 
+// --- RESPIRAÇÃO ---
 function toggleBreathing() {
     var circle = document.getElementById('breathCircle');
     var textEl = document.getElementById('breathText');
@@ -359,7 +382,7 @@ function toggleBreathing() {
     if (!isBreathing) {
         isBreathing = true;
         if (circle) circle.classList.add('active');
-        if (btn) btn.innerText = '️ Parar';
+        if (btn) btn.innerText = '⏹️ Parar';
         var phase = 0;
         var phases = ['INSPIRE', 'SEGURE', 'EXPIRE'];
         if (textEl) textEl.innerText = phases[0];
@@ -367,8 +390,7 @@ function toggleBreathing() {
             phase = (phase + 1) % 3;
             if (textEl) textEl.innerText = phases[phase];
         }, 4000);
-        speak('Respire comigo. Inspire...');
-    } else {
+        speak('Respire comigo. Inspire...');    } else {
         isBreathing = false;
         if (circle) circle.classList.remove('active');
         if (btn) btn.innerText = '▶️ Iniciar';
@@ -377,6 +399,7 @@ function toggleBreathing() {
     }
 }
 
+// --- CHECKLIST ---
 function confirmChecklist() {
     var items = document.querySelectorAll('#checklistContainer .checklist-item');
     var checked = 0;
@@ -388,9 +411,11 @@ function confirmChecklist() {
     closeModal('checklist-modal');
 }
 
+// --- ANALYTICS ---
 function renderAnalytics() {
     var statHours = document.getElementById('statHours');
-    var statMissions = document.getElementById('statMissions');    var statStreak = document.getElementById('statStreak');
+    var statMissions = document.getElementById('statMissions');
+    var statStreak = document.getElementById('statStreak');
     
     if (statHours) statHours.innerText = flightHours;
     if (statMissions) statMissions.innerText = Math.floor(flightHours * 2);
@@ -414,8 +439,7 @@ function renderAnalytics() {
         moodChartInstance = new Chart(ctx.getContext('2d'), {
             type: 'line',
             data: {
-                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
-                datasets: [{
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],                datasets: [{
                     label: 'Energia',
                     data: [3, 4, 2, 5, 4, 5, 3],
                     borderColor: '#00ff9d',
@@ -433,13 +457,15 @@ function renderAnalytics() {
     }
 }
 
+// --- PDF ---
 function generatePDF() {
     if (typeof window.jspdf === 'undefined') {
         showToast('jsPDF não carregado', 'error');
         return;
     }
     var jsPDF = window.jspdf.jsPDF;
-    var doc = new jsPDF();    doc.setFontSize(22);
+    var doc = new jsPDF();
+    doc.setFontSize(22);
     doc.setTextColor(0, 240, 255);
     doc.text("NAVI | Relatório de Voo", 105, 20, null, null, "center");
     doc.setFontSize(12);
@@ -451,53 +477,151 @@ function generatePDF() {
     showToast('📄 PDF gerado!', 'success');
 }
 
+// --- COMANDO DE VOZ (REFINADO v9.5) ---
 function processVoiceCommand(command) {
-    console.log('Comando:', command);
-    var hotwords = ['navi', 'nave', 'navy', 'naby'];
-    var found = false;
-    var clean = command;
+    console.log('Comando recebido:', command);
     
+    // Remove a hotword se presente
+    var clean = command;
+    var hotwords = ['navi', 'nave', 'navy', 'naby'];
     for (var i = 0; i < hotwords.length; i++) {
         if (command.indexOf(hotwords[i]) !== -1) {
-            found = true;
             clean = command.replace(hotwords[i], '').trim();
             break;
-        }
-    }
+        }    }
     
-    if (!found) return;
+    console.log('Comando limpo:', clean);
+    var lower = clean.toLowerCase();
 
-    closeAllModals();
-
-    if (clean.indexOf('missão') !== -1 || clean.indexOf('missao') !== -1) {
+    // 1. MISSÃO / PLANO DE VOO
+    if (lower.indexOf('missão') !== -1 || 
+        lower.indexOf('missao') !== -1 || 
+        lower.indexOf('nova missão') !== -1 ||
+        lower.indexOf('nova missao') !== -1 ||
+        lower.indexOf('plano de voo') !== -1) {
         openModal('mission-modal');
-        speak('Missão atribuída');
-    } else if (clean.indexOf('calma') !== -1 || clean.indexOf('respirar') !== -1) {
-        openModal('calm-modal');
-        speak('Modo calma');
-    } else if (clean.indexOf('checklist') !== -1) {
-        openModal('checklist-modal');
-        speak('Checklist');
-    } else if (clean.indexOf('pomodoro') !== -1 || clean.indexOf('foco') !== -1) {
-        openModal('pomodoro-modal');
-        speak('Pomodoro');
-    } else if (clean.indexOf('analytics') !== -1 || clean.indexOf('grafico') !== -1) {
-        openModal('analytics-modal');
-        speak('Analytics');
-    } else if (clean.indexOf('mayday') !== -1 || clean.indexOf('emergencia') !== -1) {
-        triggerMayday();
-        speak('Mayday');
-    } else if (clean.indexOf('claro') !== -1) {
-        if (!isLightMode) toggleTheme();    } else if (clean.indexOf('escuro') !== -1) {
-        if (isLightMode) toggleTheme();
-    } else if (clean.indexOf('parar') !== -1 || clean.indexOf('fechar') !== -1) {
-        if (alwaysListening) toggleAlwaysListening();
-        speak('Tchau');
-    } else {
-        showToast('Comando não entendido: ' + clean, 'error');
+        speak('Plano de voo aberto');
+        return;
     }
+
+    // 2. POMODORO / FOCO / TIMER
+    if (lower.indexOf('foco') !== -1 || 
+        lower.indexOf('pomodoro') !== -1 || 
+        lower.indexOf('timer') !== -1 ||
+        lower.indexOf('temporizador') !== -1) {
+        openModal('pomodoro-modal');
+        speak('Modo foco ativado');
+        return;
+    }
+
+    // 3. CONTROLE DE TURBULÊNCIA
+    if (lower.indexOf('respirar') !== -1 || 
+        lower.indexOf('calma') !== -1 || 
+        lower.indexOf('controle de turbulencia') !== -1 ||
+        lower.indexOf('controle de turbulência') !== -1) {
+        openModal('calm-modal');
+        speak('Controle de turbulência ativado');
+        return;
+    }
+
+    // 4. CHECKLIST
+    if (lower.indexOf('checklist') !== -1 || 
+        lower.indexOf('check list') !== -1 ||
+        lower.indexOf('lista de decolagem') !== -1) {
+        openModal('checklist-modal');
+        speak('Checklist aberto');
+        return;
+    }
+
+    // 5. ANALYTICS / ESTATÍSTICAS / GRÁFICO
+    if (lower.indexOf('estatisticas') !== -1 ||
+        lower.indexOf('estatísticas') !== -1 ||
+        lower.indexOf('grafico') !== -1 || 
+        lower.indexOf('gráfico') !== -1 ||        lower.indexOf('analytics') !== -1 ||
+        lower.indexOf('calendario') !== -1 ||
+        lower.indexOf('calendário') !== -1) {
+        openModal('analytics-modal');
+        speak('Analytics aberto');
+        return;
+    }
+
+    // 6. PERFIL / EDITAR
+    if (lower.indexOf('perfil') !== -1 || 
+        lower.indexOf('editar') !== -1 || 
+        lower.indexOf('edita') !== -1 ||
+        lower.indexOf('identidade') !== -1) {
+        editProfile();
+        speak('Abrindo perfil');
+        return;
+    }
+
+    // 7. AJUDA / LISTA DE COMANDOS
+    if (lower.indexOf('ajuda') !== -1 || 
+        lower.indexOf('lista de comandos') !== -1 ||
+        lower.indexOf('comandos') !== -1 ||
+        lower.indexOf('help') !== -1) {
+        openModal('voice-commands-modal');
+        speak('Aqui estão os comandos disponíveis');
+        return;
+    }
+
+    // 8. MAYDAY / EMERGÊNCIA
+    if (lower.indexOf('mayday') !== -1 || 
+        lower.indexOf('emergencia') !== -1 || 
+        lower.indexOf('emergência') !== -1 ||
+        lower.indexOf('socorro') !== -1 ||
+        lower.indexOf('panico') !== -1 ||
+        lower.indexOf('pânico') !== -1) {
+        triggerMayday();
+        speak('Modo emergência');
+        return;
+    }
+
+    // 9. TEMA CLARO
+    if (lower.indexOf('claro') !== -1 || 
+        lower.indexOf('light') !== -1 || 
+        lower.indexOf('branco') !== -1 ||
+        lower.indexOf('dia') !== -1) {
+        if (!isLightMode) {
+            toggleTheme();
+            speak('Tema claro ativado');
+        }
+        return;    }
+
+    // 10. TEMA ESCURO
+    if (lower.indexOf('escuro') !== -1 || 
+        lower.indexOf('dark') !== -1 || 
+        lower.indexOf('preto') !== -1 ||
+        lower.indexOf('noite') !== -1) {
+        if (isLightMode) {
+            toggleTheme();
+            speak('Tema escuro ativado');
+        }
+        return;
+    }
+
+    // 11. PARAR / DESATIVAR TUDO
+    if (lower.indexOf('parar') !== -1 || 
+        lower.indexOf('fechar') !== -1 || 
+        lower.indexOf('sair') !== -1 ||
+        lower.indexOf('cancelar') !== -1 ||
+        lower.indexOf('tchau') !== -1 ||
+        lower.indexOf('desativar tudo') !== -1 ||
+        lower.indexOf('desligar') !== -1) {
+        closeAllModals();
+        if (alwaysListening) {
+            toggleAlwaysListening();
+        }
+        speak('Até logo');
+        return;
+    }
+
+    // Se nada foi reconhecido
+    showToast('Não entendi. Diga: missão, foco, perfil, etc.', 'error');
+    speak('Não entendi o comando');
 }
 
+// --- ESCUTA PERMANENTE ---
 async function toggleAlwaysListening() {
     console.log('Toggle listening:', alwaysListening);
     var micFab = document.getElementById('micFab');
@@ -511,8 +635,7 @@ async function toggleAlwaysListening() {
             return;
         }
         
-        try {
-            if ('wakeLock' in navigator) {
+        try {            if ('wakeLock' in navigator) {
                 wakeLock = await navigator.wakeLock.request('screen');
                 console.log('Wake Lock adquirido');
             }
@@ -531,13 +654,14 @@ async function toggleAlwaysListening() {
             if (micFab) micFab.classList.add('listening');
             if (micLabel) micLabel.innerText = 'Ativo';
             if (indicator) indicator.classList.remove('hidden');
-            showToast('️ Escuta ativada! Diga "NAVI".', 'success');
+            showToast('🎙️ Escuta ativada! Diga "NAVI".', 'success');
         };
         
         alwaysRecognition.onresult = function(event) {
             var command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
             console.log('Voice result:', command);
-                        if (command.indexOf('navi') !== -1 || command.indexOf('nave') !== -1) {
+            
+            if (command.indexOf('navi') !== -1 || command.indexOf('nave') !== -1) {
                 showToast('🎙️ "' + command + '"', 'info');
             }
             
@@ -560,8 +684,7 @@ async function toggleAlwaysListening() {
                 }
             }
         };
-        
-        alwaysRecognition.onend = function() {
+                alwaysRecognition.onend = function() {
             console.log('Recognition ended, listening:', alwaysListening);
             if (alwaysListening) {
                 setTimeout(function() {
@@ -586,7 +709,8 @@ async function toggleAlwaysListening() {
         }
         if (wakeLock) {
             wakeLock.release();
-            wakeLock = null;        }
+            wakeLock = null;
+        }
         if (micFab) micFab.classList.remove('listening');
         if (micLabel) micLabel.innerText = 'Ativar';
         if (indicator) indicator.classList.add('hidden');
@@ -596,6 +720,7 @@ async function toggleAlwaysListening() {
     localStorage.setItem('navi_always_listening', alwaysListening ? 'true' : 'false');
 }
 
+// --- VISIBILITY CHANGE ---
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible' && alwaysListening) {
         console.log('App visible, checking recognition...');
@@ -606,9 +731,9 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
+// --- MAYDAY ---
 function triggerMayday() {
-    closeAllModals();
-    var overlay = document.getElementById('mayday-overlay');
+    closeAllModals();    var overlay = document.getElementById('mayday-overlay');
     if (overlay) overlay.classList.remove('hidden');
     speak('Modo emergência. Respire.');
 }
@@ -619,8 +744,22 @@ function closeMayday() {
     speak('Sistemas normalizados.');
 }
 
+// --- INICIALIZAÇÃO ---
 window.addEventListener('DOMContentLoaded', function() {
-    console.log('NAVI v9.4 - DOM loaded');
+    console.log('NAVI v9.5 - DOM loaded');
+    
+    // REGISTRAR SERVICE WORKER PARA PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+                console.log('✅ Service Worker registrado:', registration);
+                showToast('🚀 PWA pronto para instalação', 'success');
+            })
+            .catch(function(error) {
+                console.log('❌ Erro ao registrar Service Worker:', error);
+                showToast('⚠️ PWA não disponível', 'error');
+            });
+    }
     
     updateAppMode();
     
@@ -635,15 +774,15 @@ window.addEventListener('DOMContentLoaded', function() {
                 statusEl.innerText = '⚠️ IA falhou.';
                 btn.disabled = false;
             });
-        } else {            statusEl.innerText = 'MobileNet não disponível.';
+        } else {
+            statusEl.innerText = 'MobileNet não disponível.';
             btn.disabled = false;
         }
     }
     
     if (profile) {
         var modal = document.getElementById('profile-modal');
-        if (modal) modal.classList.add('hidden');
-        initDashboard();
+        if (modal) modal.classList.add('hidden');        initDashboard();
         checkStreak();
         applyBackground();
     }
@@ -673,5 +812,5 @@ window.addEventListener('DOMContentLoaded', function() {
         }, 1500);
     }
     
-    console.log('NAVI v9.4 - Ready');
+    console.log('NAVI v9.5 - Ready');
 });
