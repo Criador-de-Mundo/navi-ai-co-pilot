@@ -24,10 +24,10 @@ var missions = [
     '📚 Estudar 3 palavras novas em inglês',
     '💻 Escrever 1 função em JavaScript',
     '🎸 Tocar 1 música completa no violão',
-    '💧 Beber 500ml de água e fazer skincare',
+    ' Beber 500ml de água e fazer skincare',
     '📖 Ler 10 páginas de um livro',
     '🎯 Completar 1 exercício de programação',
-    '🧘 Fazer 5 minutos de meditação',
+    ' Fazer 5 minutos de meditação',
     '✍️ Escrever 3 coisas pelas quais é grato'
 ];
 
@@ -35,10 +35,7 @@ var missions = [
 function showToast(message, type) {
     if (!type) type = 'info';
     var container = document.getElementById('toast-container');
-    if (!container) {
-        console.log('Toast:', message);
-        return;
-    }
+    if (!container) return;
     var toast = document.createElement('div');
     toast.className = 'toast ' + type;
     toast.textContent = message;
@@ -47,10 +44,10 @@ function showToast(message, type) {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 3000);
 }
-// --- SPEAK (Text-to-Speech) ---
+
+// --- SPEAK ---
 function speak(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+    if ('speechSynthesis' in window) {        window.speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(text);
         u.lang = 'pt-BR';
         u.rate = 1.0;
@@ -96,10 +93,10 @@ function applyBackground() {
         document.body.style.backgroundSize = 'cover';
         document.body.style.backgroundPosition = 'center';
         document.body.classList.add('has-background');
-    } else {        document.body.style.backgroundImage = 'none';
+    } else {
+        document.body.style.backgroundImage = 'none';
         document.body.classList.remove('has-background');
-    }
-}
+    }}
 
 // --- TEMA ---
 function applyThemeMode() {
@@ -145,9 +142,9 @@ function closeModal(id) {
 function updateAppMode() {
     var appModeEl = document.getElementById('appMode');
     if (appModeEl) {
-        appModeEl.innerText = isPWAInstalled ? 'NAVI v9.5 (Instalado)' : 'NAVI v9.5 (Web)';    }
+        appModeEl.innerText = isPWAInstalled ? 'NAVI v9.5 (Instalado)' : 'NAVI v9.5 (Web)';
+    }
 }
-
 function installPWA() {
     if (deferredPrompt) {
         deferredPrompt.prompt();
@@ -194,10 +191,10 @@ function initDashboard() {
     var bpImg = document.getElementById('bpImg');
     var greeting = document.getElementById('greeting');
     var userInfo = document.getElementById('userInfoDisplay');
-        if (bpName) bpName.innerText = profile.name.toUpperCase();
+    
+    if (bpName) bpName.innerText = profile.name.toUpperCase();
     if (bpTitle) bpTitle.innerText = profile.title;
-    if (bpHours) bpHours.innerText = flightHours;
-    if (bpStreak) bpStreak.innerText = streak;
+    if (bpHours) bpHours.innerText = flightHours;    if (bpStreak) bpStreak.innerText = streak;
     if (bpImg) {
         bpImg.src = profile.image || 'https://ui-avatars.com/api/?name=' + profile.name + '&background=0D8ABC&color=fff&size=128';
     }
@@ -243,10 +240,10 @@ async function processImageAndStart() {
         title: title,
         tone: tone,
         image: profileImage,
-        backgroundImage: backgroundImage    };
+        backgroundImage: backgroundImage
+    };
     
-    try {
-        localStorage.setItem('navi_profile', JSON.stringify(profile));
+    try {        localStorage.setItem('navi_profile', JSON.stringify(profile));
     } catch (e) {
         showToast('Imagem muito pesada', 'error');
         return;
@@ -292,10 +289,10 @@ function completeMission() {
     speak('Missão cumprida!');
     closeModal('mission-modal');
 }
+
 // --- POMODORO ---
 function updateTimerDisplay() {
-    var m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-    var s = (timeLeft % 60).toString().padStart(2, '0');
+    var m = Math.floor(timeLeft / 60).toString().padStart(2, '0');    var s = (timeLeft % 60).toString().padStart(2, '0');
     var el = document.getElementById('timerDisplay');
     if (el) el.innerText = m + ':' + s;
 }
@@ -341,10 +338,10 @@ function playSound(type) {
     var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     var data = buffer.getChannelData(0);
     var lastOut = 0;
-        for (var i = 0; i < bufferSize; i++) {
+    
+    for (var i = 0; i < bufferSize; i++) {
         var white = Math.random() * 2 - 1;
-        if (type === 'white') data[i] = white * 0.5;
-        else if (type === 'brown') { data[i] = (lastOut + (0.02 * white)) / 1.02; lastOut = data[i]; data[i] *= 3.5; }
+        if (type === 'white') data[i] = white * 0.5;        else if (type === 'brown') { data[i] = (lastOut + (0.02 * white)) / 1.02; lastOut = data[i]; data[i] *= 3.5; }
         else if (type === 'rain') data[i] = white * 0.5;
     }
     
@@ -370,7 +367,7 @@ function playSound(type) {
 function stopSound() {
     if (currentNoiseNode) { currentNoiseNode.stop(); currentNoiseNode = null; }
     if (audioCtx) { audioCtx.close(); audioCtx = null; }
-    showToast('🔇 Som desativado', 'info');
+    showToast(' Som desativado', 'info');
 }
 
 // --- RESPIRAÇÃO ---
@@ -390,10 +387,10 @@ function toggleBreathing() {
             phase = (phase + 1) % 3;
             if (textEl) textEl.innerText = phases[phase];
         }, 4000);
-        speak('Respire comigo. Inspire...');    } else {
+        speak('Respire comigo. Inspire...');
+    } else {
         isBreathing = false;
-        if (circle) circle.classList.remove('active');
-        if (btn) btn.innerText = '▶️ Iniciar';
+        if (circle) circle.classList.remove('active');        if (btn) btn.innerText = '▶️ Iniciar';
         if (breathingInterval) { clearInterval(breathingInterval); breathingInterval = null; }
         speak('Respiração pausada.');
     }
@@ -439,10 +436,10 @@ function renderAnalytics() {
         moodChartInstance = new Chart(ctx.getContext('2d'), {
             type: 'line',
             data: {
-                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],                datasets: [{
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                datasets: [{
                     label: 'Energia',
-                    data: [3, 4, 2, 5, 4, 5, 3],
-                    borderColor: '#00ff9d',
+                    data: [3, 4, 2, 5, 4, 5, 3],                    borderColor: '#00ff9d',
                     backgroundColor: 'rgba(0, 255, 157, 0.1)',
                     tension: 0.4,
                     fill: true
@@ -477,146 +474,85 @@ function generatePDF() {
     showToast('📄 PDF gerado!', 'success');
 }
 
-// --- COMANDO DE VOZ (REFINADO v9.5) ---
+// --- COMANDO DE VOZ ---
 function processVoiceCommand(command) {
     console.log('Comando recebido:', command);
     
-    // Remove a hotword se presente
     var clean = command;
     var hotwords = ['navi', 'nave', 'navy', 'naby'];
     for (var i = 0; i < hotwords.length; i++) {
         if (command.indexOf(hotwords[i]) !== -1) {
             clean = command.replace(hotwords[i], '').trim();
             break;
-        }    }
+        }
+    }
     
     console.log('Comando limpo:', clean);
     var lower = clean.toLowerCase();
-
-    // 1. MISSÃO / PLANO DE VOO
-    if (lower.indexOf('missão') !== -1 || 
-        lower.indexOf('missao') !== -1 || 
-        lower.indexOf('nova missão') !== -1 ||
-        lower.indexOf('nova missao') !== -1 ||
-        lower.indexOf('plano de voo') !== -1) {
+    if (lower.indexOf('missão') !== -1 || lower.indexOf('missao') !== -1 || lower.indexOf('plano de voo') !== -1) {
         openModal('mission-modal');
         speak('Plano de voo aberto');
         return;
     }
 
-    // 2. POMODORO / FOCO / TIMER
-    if (lower.indexOf('foco') !== -1 || 
-        lower.indexOf('pomodoro') !== -1 || 
-        lower.indexOf('timer') !== -1 ||
-        lower.indexOf('temporizador') !== -1) {
+    if (lower.indexOf('foco') !== -1 || lower.indexOf('pomodoro') !== -1 || lower.indexOf('timer') !== -1) {
         openModal('pomodoro-modal');
         speak('Modo foco ativado');
         return;
     }
 
-    // 3. CONTROLE DE TURBULÊNCIA
-    if (lower.indexOf('respirar') !== -1 || 
-        lower.indexOf('calma') !== -1 || 
-        lower.indexOf('controle de turbulencia') !== -1 ||
-        lower.indexOf('controle de turbulência') !== -1) {
+    if (lower.indexOf('respirar') !== -1 || lower.indexOf('calma') !== -1) {
         openModal('calm-modal');
         speak('Controle de turbulência ativado');
         return;
     }
 
-    // 4. CHECKLIST
-    if (lower.indexOf('checklist') !== -1 || 
-        lower.indexOf('check list') !== -1 ||
-        lower.indexOf('lista de decolagem') !== -1) {
+    if (lower.indexOf('checklist') !== -1 || lower.indexOf('check list') !== -1) {
         openModal('checklist-modal');
         speak('Checklist aberto');
         return;
     }
 
-    // 5. ANALYTICS / ESTATÍSTICAS / GRÁFICO
-    if (lower.indexOf('estatisticas') !== -1 ||
-        lower.indexOf('estatísticas') !== -1 ||
-        lower.indexOf('grafico') !== -1 || 
-        lower.indexOf('gráfico') !== -1 ||        lower.indexOf('analytics') !== -1 ||
-        lower.indexOf('calendario') !== -1 ||
-        lower.indexOf('calendário') !== -1) {
+    if (lower.indexOf('estatisticas') !== -1 || lower.indexOf('estatísticas') !== -1 || lower.indexOf('grafico') !== -1 || lower.indexOf('gráfico') !== -1 || lower.indexOf('analytics') !== -1) {
         openModal('analytics-modal');
         speak('Analytics aberto');
         return;
     }
 
-    // 6. PERFIL / EDITAR
-    if (lower.indexOf('perfil') !== -1 || 
-        lower.indexOf('editar') !== -1 || 
-        lower.indexOf('edita') !== -1 ||
-        lower.indexOf('identidade') !== -1) {
+    if (lower.indexOf('perfil') !== -1 || lower.indexOf('editar') !== -1 || lower.indexOf('edita') !== -1) {
         editProfile();
         speak('Abrindo perfil');
         return;
     }
 
-    // 7. AJUDA / LISTA DE COMANDOS
-    if (lower.indexOf('ajuda') !== -1 || 
-        lower.indexOf('lista de comandos') !== -1 ||
-        lower.indexOf('comandos') !== -1 ||
-        lower.indexOf('help') !== -1) {
+    if (lower.indexOf('ajuda') !== -1 || lower.indexOf('lista de comandos') !== -1 || lower.indexOf('comandos') !== -1) {
         openModal('voice-commands-modal');
         speak('Aqui estão os comandos disponíveis');
         return;
     }
 
-    // 8. MAYDAY / EMERGÊNCIA
-    if (lower.indexOf('mayday') !== -1 || 
-        lower.indexOf('emergencia') !== -1 || 
-        lower.indexOf('emergência') !== -1 ||
-        lower.indexOf('socorro') !== -1 ||
-        lower.indexOf('panico') !== -1 ||
-        lower.indexOf('pânico') !== -1) {
+    if (lower.indexOf('mayday') !== -1 || lower.indexOf('emergencia') !== -1 || lower.indexOf('emergência') !== -1) {
         triggerMayday();
         speak('Modo emergência');
         return;
     }
 
-    // 9. TEMA CLARO
-    if (lower.indexOf('claro') !== -1 || 
-        lower.indexOf('light') !== -1 || 
-        lower.indexOf('branco') !== -1 ||
-        lower.indexOf('dia') !== -1) {
-        if (!isLightMode) {
-            toggleTheme();
-            speak('Tema claro ativado');
-        }
-        return;    }
-
-    // 10. TEMA ESCURO
-    if (lower.indexOf('escuro') !== -1 || 
-        lower.indexOf('dark') !== -1 || 
-        lower.indexOf('preto') !== -1 ||
-        lower.indexOf('noite') !== -1) {
-        if (isLightMode) {
-            toggleTheme();
-            speak('Tema escuro ativado');
-        }
+    if (lower.indexOf('claro') !== -1 || lower.indexOf('light') !== -1) {        if (!isLightMode) { toggleTheme(); speak('Tema claro ativado'); }
         return;
     }
 
-    // 11. PARAR / DESATIVAR TUDO
-    if (lower.indexOf('parar') !== -1 || 
-        lower.indexOf('fechar') !== -1 || 
-        lower.indexOf('sair') !== -1 ||
-        lower.indexOf('cancelar') !== -1 ||
-        lower.indexOf('tchau') !== -1 ||
-        lower.indexOf('desativar tudo') !== -1 ||
-        lower.indexOf('desligar') !== -1) {
+    if (lower.indexOf('escuro') !== -1 || lower.indexOf('dark') !== -1) {
+        if (isLightMode) { toggleTheme(); speak('Tema escuro ativado'); }
+        return;
+    }
+
+    if (lower.indexOf('parar') !== -1 || lower.indexOf('fechar') !== -1 || lower.indexOf('tchau') !== -1 || lower.indexOf('desativar tudo') !== -1) {
         closeAllModals();
-        if (alwaysListening) {
-            toggleAlwaysListening();
-        }
+        if (alwaysListening) toggleAlwaysListening();
         speak('Até logo');
         return;
     }
 
-    // Se nada foi reconhecido
     showToast('Não entendi. Diga: missão, foco, perfil, etc.', 'error');
     speak('Não entendi o comando');
 }
@@ -631,13 +567,13 @@ async function toggleAlwaysListening() {
     if (!alwaysListening) {
         var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            showToast('❌ Navegador não suporta voz', 'error');
+            showToast(' Navegador não suporta voz', 'error');
             return;
         }
         
-        try {            if ('wakeLock' in navigator) {
+        try {
+            if ('wakeLock' in navigator) {
                 wakeLock = await navigator.wakeLock.request('screen');
-                console.log('Wake Lock adquirido');
             }
         } catch (err) {
             console.error('Erro Wake Lock:', err);
@@ -649,43 +585,28 @@ async function toggleAlwaysListening() {
         alwaysRecognition.interimResults = false;
         
         alwaysRecognition.onstart = function() {
-            console.log('Recognition started');
             alwaysListening = true;
-            if (micFab) micFab.classList.add('listening');
-            if (micLabel) micLabel.innerText = 'Ativo';
+            if (micFab) micFab.classList.add('listening');            if (micLabel) micLabel.innerText = 'Ativo';
             if (indicator) indicator.classList.remove('hidden');
-            showToast('🎙️ Escuta ativada! Diga "NAVI".', 'success');
+            showToast('️ Escuta ativada!', 'success');
         };
         
         alwaysRecognition.onresult = function(event) {
             var command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-            console.log('Voice result:', command);
-            
-            if (command.indexOf('navi') !== -1 || command.indexOf('nave') !== -1) {
-                showToast('🎙️ "' + command + '"', 'info');
-            }
-            
             processVoiceCommand(command);
         };
         
         alwaysRecognition.onerror = function(event) {
-            console.error('Voice error:', event.error);
             if (event.error === 'not-allowed') {
                 showToast('❌ Microfone bloqueado', 'error');
                 alwaysListening = false;
                 if (micFab) micFab.classList.remove('listening');
                 if (micLabel) micLabel.innerText = 'Ativar';
                 if (indicator) indicator.classList.add('hidden');
-            } else if (event.error === 'no-speech') {
-                if (alwaysListening) {
-                    setTimeout(function() {
-                        try { alwaysRecognition.start(); } catch(e) {}
-                    }, 1000);
-                }
             }
         };
-                alwaysRecognition.onend = function() {
-            console.log('Recognition ended, listening:', alwaysListening);
+        
+        alwaysRecognition.onend = function() {
             if (alwaysListening) {
                 setTimeout(function() {
                     if (alwaysListening && alwaysRecognition) {
@@ -695,22 +616,11 @@ async function toggleAlwaysListening() {
             }
         };
         
-        try {
-            alwaysRecognition.start();
-        } catch(e) {
-            console.error('Erro ao iniciar:', e);
-            showToast('Erro ao iniciar voz', 'error');
-        }
+        try { alwaysRecognition.start(); } catch(e) { showToast('Erro ao iniciar voz', 'error'); }
     } else {
         alwaysListening = false;
-        if (alwaysRecognition) {
-            alwaysRecognition.stop();
-            alwaysRecognition = null;
-        }
-        if (wakeLock) {
-            wakeLock.release();
-            wakeLock = null;
-        }
+        if (alwaysRecognition) { alwaysRecognition.stop(); alwaysRecognition = null; }
+        if (wakeLock) { wakeLock.release(); wakeLock = null; }
         if (micFab) micFab.classList.remove('listening');
         if (micLabel) micLabel.innerText = 'Ativar';
         if (indicator) indicator.classList.add('hidden');
@@ -720,20 +630,15 @@ async function toggleAlwaysListening() {
     localStorage.setItem('navi_always_listening', alwaysListening ? 'true' : 'false');
 }
 
-// --- VISIBILITY CHANGE ---
 document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'visible' && alwaysListening) {
-        console.log('App visible, checking recognition...');
-        if (!alwaysRecognition) {
-            console.log('Restarting recognition');
-            toggleAlwaysListening();
-        }
+        if (!alwaysRecognition) toggleAlwaysListening();
     }
 });
-
 // --- MAYDAY ---
 function triggerMayday() {
-    closeAllModals();    var overlay = document.getElementById('mayday-overlay');
+    closeAllModals();
+    var overlay = document.getElementById('mayday-overlay');
     if (overlay) overlay.classList.remove('hidden');
     speak('Modo emergência. Respire.');
 }
@@ -748,16 +653,14 @@ function closeMayday() {
 window.addEventListener('DOMContentLoaded', function() {
     console.log('NAVI v9.5 - DOM loaded');
     
-    // REGISTRAR SERVICE WORKER PARA PWA
+    // REGISTRAR SERVICE WORKER
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('./sw.js')
             .then(function(registration) {
                 console.log('✅ Service Worker registrado:', registration);
-                showToast('🚀 PWA pronto para instalação', 'success');
             })
             .catch(function(error) {
-                console.log('❌ Erro ao registrar Service Worker:', error);
-                showToast('⚠️ PWA não disponível', 'error');
+                console.log('❌ Erro Service Worker:', error);
             });
     }
     
@@ -781,8 +684,8 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     
     if (profile) {
-        var modal = document.getElementById('profile-modal');
-        if (modal) modal.classList.add('hidden');        initDashboard();
+        var modal = document.getElementById('profile-modal');        if (modal) modal.classList.add('hidden');
+        initDashboard();
         checkStreak();
         applyBackground();
     }
@@ -797,10 +700,7 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     
     if (localStorage.getItem('navi_always_listening') === 'true') {
-        setTimeout(function() {
-            console.log('Restoring listening');
-            toggleAlwaysListening();
-        }, 1000);
+        setTimeout(function() { toggleAlwaysListening(); }, 1000);
     }
     
     var urlParams = new URLSearchParams(window.location.search);
