@@ -1,7 +1,7 @@
 {
   "name": "NAVI | Co-Piloto Pessoal",
   "short_name": "NAVI",
-  "description": "IA de visão computacional local para foco, rotina e saúde mental. Adaptativo, privado e instalável.",
+  "description": "IA de visão computacional com notificações push e comando de voz em segundo plano.",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
@@ -23,5 +23,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "gcm_sender_id": "103953800507"
 }

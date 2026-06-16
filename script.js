@@ -1,237 +1,683 @@
-// script.js - NAVI v6.0 OMNI (IA + PWA + Todas as Funções)
+// NAVI v9.4 - ALWAYS LISTENING & PWA
+// Todas as funções no escopo global
 
-let model = null;
-let profile = JSON.parse(localStorage.getItem('navi_profile')) || null;
-let flightHours = parseInt(localStorage.getItem('navi_hours')) || 0;
+// --- VARIÁVEIS GLOBAIS ---
+var profile = JSON.parse(localStorage.getItem('navi_profile')) || null;
+var flightHours = parseInt(localStorage.getItem('navi_hours')) || 0;
+var streak = parseInt(localStorage.getItem('navi_streak')) || 0;
+var lastActiveDate = localStorage.getItem('navi_last_active');
+var isLightMode = localStorage.getItem('navi_theme_mode') === 'light';
+var deferredPrompt = null;
+var isPWAInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+var alwaysListening = false;
+var alwaysRecognition = null;
+var timerInterval = null;
+var timeLeft = 25 * 60;
+var audioCtx = null;
+var currentNoiseNode = null;
+var breathingInterval = null;
+var isBreathing = false;
+var currentMission = '';
+var moodChartInstance = null;
 
-// 1. INICIALIZAÇÃO DA IA
-async function loadAI() {
-    const statusEl = document.getElementById('ai-status');
-    const btn = document.getElementById('btn-start');
-    try {
-        statusEl.innerText = " Baixando cérebro da IA (apenas 5MB)...";
-        model = await mobilenet.load({ version: 1, alpha: 0.25 });
-        statusEl.innerText = "✅ IA Pronta! Pode enviar a foto.";
-        statusEl.style.color = "var(--hud-accent)";
-        btn.disabled = false;
-        if (profile) {
-            document.getElementById('profile-modal').classList.add('hidden');
-            initDashboard(profile);
-        }
-    } catch (error) {
-        console.error("Erro na IA:", error);
-        statusEl.innerText = "️ Falha na IA. Usando modo manual.";
-        statusEl.style.color = "var(--hud-alert)";
-        btn.disabled = false;
-        btn.innerText = "Iniciar Sem IA";
+var missions = [
+    '📚 Estudar 3 palavras novas em inglês',
+    '💻 Escrever 1 função em JavaScript',
+    ' Tocar 1 música completa no violão',
+    '💧 Beber 500ml de água e fazer skincare',
+    '📖 Ler 10 páginas de um livro',
+    '🎯 Completar 1 exercício de programação',
+    '🧘 Fazer 5 minutos de meditação',
+    '✍️ Escrever 3 coisas pelas quais é grato'
+];
+
+// --- TOAST NOTIFICATIONS ---
+function showToast(message, type) {
+    if (!type) type = 'info';
+    var container = document.getElementById('toast-container');
+    if (!container) {
+        console.log('Toast:', message);
+        return;
     }
+    var toast = document.createElement('div');
+    toast.className = 'toast ' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function() {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 3000);
 }
-loadAI();
-
-// 2. PROCESSAMENTO DA IMAGEM E TEMA
-async function processImageAndStart() {
-    const name = document.getElementById('inputName').value;
-    const age = document.getElementById('inputAge').value;
-    const fileInput = document.getElementById('inputImageFile');
-    const statusEl = document.getElementById('ai-status');
-
-    if (!name) { alert("Comandante, preciso do seu nome."); return; }
-
-    statusEl.innerText = "🔍 Analisando imagem...";
-    document.getElementById('btn-start').disabled = true;
-
-    if (fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        const imageData = await toBase64(file);
-        const img = new Image();
-        img.src = imageData;
-        
-        img.onload = async () => {
-            let detectedTheme = 'theme-aviator';            let themeName = 'Aviador/Tech';
-            let confidenceText = "Manual";
-
-            if (model) {
-                try {
-                    const predictions = await model.classify(img);
-                    const topPred = predictions[0].className.toLowerCase();
-                    const conf = (predictions[0].probability * 100).toFixed(1);
-                    confidenceText = `${conf}%`;
-
-                    if (topPred.includes('guitar') || topPred.includes('microphone') || topPred.includes('music') || topPred.includes('stage') || topPred.includes('violin') || topPred.includes('art')) {
-                        detectedTheme = 'theme-artist'; themeName = 'Artista/Música';
-                    } else if (topPred.includes('plant') || topPred.includes('flower') || topPred.includes('nature') || topPred.includes('green')) {
-                        detectedTheme = 'theme-nature'; themeName = 'Natureza/Calma';
-                    } else if (topPred.includes('airplane') || topPred.includes('laptop') || topPred.includes('keyboard') || topPred.includes('screen') || topPred.includes('computer')) {
-                        detectedTheme = 'theme-aviator'; themeName = 'Aviador/Tech';
-                    }
-                } catch (err) { console.log("Falha na classificação, usando padrão."); }
-            }
-
-            profile = { name, age: age || 'N/A', image: imageData, aiDetected: `${themeName} (${confidenceText})`, theme: detectedTheme };
-            localStorage.setItem('navi_profile', JSON.stringify(profile));
-            speak(`Perfil analisado. Tema ${themeName} ativado.`);
-            document.getElementById('profile-modal').classList.add('hidden');
-            initDashboard(profile);
-        };
-    } else {
-        profile = { name, age: age || 'N/A', image: null, aiDetected: 'Padrão (Sem Foto)', theme: 'theme-aviator' };
-        localStorage.setItem('navi_profile', JSON.stringify(profile));
-        document.getElementById('profile-modal').classList.add('hidden');
-        initDashboard(profile);
-    }
-}
-
-// 3. APLICAÇÃO DO DASHBOARD
-function initDashboard(data) {
-    document.body.className = data.theme;
-    document.getElementById('bpName').innerText = data.name.toUpperCase();
-    document.getElementById('bpAge').innerText = data.age;
-    document.getElementById('ai-detection').innerText = data.aiDetected;
-    document.getElementById('bpHours').innerText = flightHours;
-    
-    if (data.image) document.getElementById('bpImg').src = data.image;
-    else document.getElementById('bpImg').src = 'https://ui-avatars.com/api/?name=' + data.name + '&background=0D8ABC&color=fff&size=128';
-
-    let welcomeMsg = `Sistemas prontos, Comandante ${data.name}.`;
-    if (data.theme === 'theme-artist') welcomeMsg = `A criatividade é sua bússola, ${data.name}. O palco é seu.`;
-    if (data.theme === 'theme-nature') welcomeMsg = `Conexão com a natureza estabelecida, ${data.name}.`;
-    
-    document.getElementById('greeting').innerText = welcomeMsg;    document.getElementById('userInfoDisplay').innerText = `${data.name}, ${data.age} anos`;
-    
-    const savedMood = localStorage.getItem('navi_mood');
-    if(savedMood) document.getElementById('bpMood').innerText = savedMood;
-}
-
-// 4. FUNÇÕES AUXILIARES
-function toBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-    });
-}
-
-function editProfile() {
-    document.getElementById('profile-modal').classList.remove('hidden');
-    document.getElementById('inputName').value = profile.name;
-    document.getElementById('inputAge').value = profile.age;
-    document.getElementById('ai-status').innerText = "Pronto para nova análise.";
-    document.getElementById('btn-start').disabled = false;
-    document.getElementById('btn-start').innerText = "Analisar e Reiniciar";
-}
-
+// --- SPEAK (Text-to-Speech) ---
 function speak(text) {
     if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'pt-BR'; u.rate = 0.95;
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'pt-BR';
+        u.rate = 1.0;
+        u.pitch = 1.0;
+        u.volume = 1.0;
         window.speechSynthesis.speak(u);
     }
 }
 
-// 5. FUNCIONALIDADES DO APP
-function checkMood() {
-    const moods = ['️ Crítico', '☁️ Nublado', '⛅ Instável', '️ Limpo', '🚀 Decolando'];
-    const choice = prompt(`Status da cabine?\n1. ${moods[0]}\n2. ${moods[1]}\n3. ${moods[2]}\n4. ${moods[3]}\n5. ${moods[4]}\n\nDigite o número:`);
-    if (choice >= 1 && choice <= 5) {
-        const mood = moods[choice-1];
-        document.getElementById('bpMood').innerText = mood;
-        localStorage.setItem('navi_mood', mood);
-        speak(`Humor registrado: ${mood}.`);
-    }
-}
-
-function shareProfile() {
-    const data = btoa(JSON.stringify({ n: profile.name, h: flightHours, t: profile.theme }));
-    const link = `${window.location.origin}${window.location.pathname}?navi=${data}`;
-    navigator.clipboard.writeText(link).then(() => {        speak("Link copiado. Envie para a torre.");
-        alert("Link do Comandante copiado!");
+// --- COMPRESSÃO DE IMAGENS ---
+function compressImage(file, maxWidth, maxHeight, quality) {
+    return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function(event) {
+            var img = new Image();
+            img.src = event.target.result;
+            img.onload = function() {
+                var canvas = document.createElement('canvas');
+                var width = img.width;
+                var height = img.height;
+                if (width > height) {
+                    if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
+                } else {
+                    if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = function(error) { reject(error); };
+        };
+        reader.onerror = function(error) { reject(error); };
     });
 }
 
-const missions = ["Inglês: 3 palavras novas.", "Código: 1 função em JS.", "Violão: 1 música completa.", "Rotina: Skincare e 500ml de água."];
-
-function startMission() {
-    const actionArea = document.getElementById('action-area');
-    const missao = missions[Math.floor(Math.random() * missions.length)];
-    actionArea.innerHTML = `<h3>🗺️ MISSÃO</h3><p style="margin:10px 0">${missao}</p><button class="btn-action" onclick="completeMission('${missao}')">Cumprida</button><button class="btn-close" onclick="closeAction()">Cancelar</button>`;
-    actionArea.classList.remove('hidden');
-    speak("Missão atribuída.");
-}
-
-function completeMission(text) {
-    flightHours++;
-    localStorage.setItem('navi_hours', flightHours);
-    document.getElementById('bpHours').innerText = flightHours;
-    
-    let log = JSON.parse(localStorage.getItem('navi_log') || '[]');
-    const now = new Date();
-    log.unshift({ date: now.toLocaleDateString('pt-BR') + ' ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0'), text: text });
-    if (log.length > 10) log.pop();
-    localStorage.setItem('navi_log', JSON.stringify(log));
-
-    speak("Missão cumprida. +1 hora de voo registrada.");
-    closeAction();
-}
-
-function showLogbook() {
-    const actionArea = document.getElementById('action-area');
-    const log = JSON.parse(localStorage.getItem('navi_log') || '[]');
-    let logHTML = `<h3>📓 DIÁRIO DE BORDO</h3>`;
-    if (log.length === 0) logHTML += `<p style="color:#8892b0">Nenhum voo registrado ainda.</p>`;
-    else log.forEach(entry => { logHTML += `<div class="log-entry"><span style="font-size:0.7rem; color:var(--hud-accent)">${entry.date}</span><br>${entry.text}</div>`; });
-    logHTML += `<button class="btn-close" onclick="closeAction()">Fechar</button>`;
-    actionArea.innerHTML = logHTML;
-    actionArea.classList.remove('hidden');
-}
-
-function activateCalmMode() {
-    const actionArea = document.getElementById('action-area');
-    actionArea.innerHTML = `<h3>🌬️ ESTABILIZANDO</h3><p style="color:rgba(255,255,255,0.7); margin-bottom:10px">Siga o círculo.</p><div class="breathing-circle">RESPIRE</div><button class="btn-close" onclick="closeAction()">Ok</button>`;
-    actionArea.classList.remove('hidden');
-    speak("Respire comigo.");
-}
-
-function showChecklist() {
-    const actionArea = document.getElementById('action-area');    actionArea.innerHTML = `<h3>✅ CHECKLIST</h3>
-    <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"> 💧 Hidratação</label>
-    <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"> ️ Aquecimento / Postura</label>
-    <button class="btn-action" onclick="closeAction()">Confirmar</button>`;
-    actionArea.classList.remove('hidden');
-}
-
-function activateVoiceCommand() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) { alert("Navegador não suporta voz."); return; }
-    const rec = new SpeechRecognition();
-    rec.lang = 'pt-BR';
-    document.querySelector('.voice-btn').classList.add('listening');
-    speak("Ouvindo...");
-    rec.start();
-    rec.onresult = (e) => {
-        document.querySelector('.voice-btn').classList.remove('listening');
-        const cmd = e.results[0][0].transcript.toLowerCase();
-        if(cmd.includes('missão') || cmd.includes('missao')) startMission();
-        else if(cmd.includes('calma') || cmd.includes('respirar')) activateCalmMode();
-        else if(cmd.includes('checklist')) showChecklist();
-        else if(cmd.includes('diário') || cmd.includes('diario')) showLogbook();
-        else speak("Não entendi o comando.");
-    };
-    rec.onerror = () => document.querySelector('.voice-btn').classList.remove('listening');
-}
-
-function closeAction() { document.getElementById('action-area').classList.add('hidden'); }
-function triggerMayday() { document.getElementById('mayday-overlay').classList.remove('hidden'); speak("Modo de emergência. Respire."); }
-function closeMayday() { document.getElementById('mayday-overlay').classList.add('hidden'); speak("Sistemas normalizados."); }
-
-window.onload = () => {
-    const params = new URLSearchParams(window.location.search);
-    const sharedData = params.get('navi');
-    if (sharedData) {
-        try {
-            const decoded = JSON.parse(atob(sharedData));
-            alert(` SINAL RECEBIDO: Comandante ${decoded.n} (Modo: ${decoded.t}) com ${decoded.h}h de voo.`);
-        } catch (e) { console.log("Erro ao ler link"); }
+// --- BACKGROUND ---
+function applyBackground() {
+    if (profile && profile.backgroundImage) {
+        document.body.style.backgroundImage = 'url(' + profile.backgroundImage + ')';
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.classList.add('has-background');
+    } else {        document.body.style.backgroundImage = 'none';
+        document.body.classList.remove('has-background');
     }
-};
+}
+
+// --- TEMA ---
+function applyThemeMode() {
+    if (isLightMode) document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
+    var btn = document.getElementById('themeBtn');
+    if (btn) btn.innerText = isLightMode ? '🌙' : '☀️';
+}
+
+function toggleTheme() {
+    isLightMode = !isLightMode;
+    localStorage.setItem('navi_theme_mode', isLightMode ? 'light' : 'dark');
+    applyThemeMode();
+    showToast(isLightMode ? '☀️ Modo claro' : '🌙 Modo escuro', 'info');
+}
+
+// --- MODAIS (Funções Globais) ---
+function openModal(id) {
+    console.log('Abrindo modal:', id);
+    var modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.remove('hidden');
+        if (id === 'analytics-modal') renderAnalytics();
+        if (id === 'mission-modal') newMission();
+    } else {
+        console.error('Modal não encontrado:', id);
+    }
+}
+
+function closeModal(id) {
+    var modal = document.getElementById(id);
+    if (modal) modal.classList.add('hidden');
+}
+
+// --- PWA DETECTION & INSTALL ---
+function updateAppMode() {
+    var appModeEl = document.getElementById('appMode');
+    if (appModeEl) {
+        appModeEl.innerText = isPWAInstalled ? 'NAVI v9.4 (Instalado)' : 'NAVI v9.4 (Web)';
+    }
+}
+
+function installPWA() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(choiceResult) {            if (choiceResult.outcome === 'accepted') {
+                showToast('✅ NAVI instalado com sucesso!', 'success');
+                speak('NAVI instalado!');
+            }
+            deferredPrompt = null;
+            dismissInstall();
+        });
+    } else {
+        showToast(' Menu do navegador > Adicionar à tela inicial', 'info');
+    }
+}
+
+function dismissInstall() {
+    var banner = document.getElementById('install-banner');
+    if (banner) banner.classList.add('hidden');
+    localStorage.setItem('navi_install_dismissed', 'true');
+}
+
+// --- STREAK ---
+function checkStreak() {
+    var today = new Date().toDateString();
+    if (lastActiveDate !== today) {
+        var yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (lastActiveDate === yesterday.toDateString()) streak++;
+        else streak = 1;
+        lastActiveDate = today;
+        localStorage.setItem('navi_streak', streak);
+        localStorage.setItem('navi_last_active', today);
+    }
+}
+
+// --- DASHBOARD ---
+function initDashboard() {
+    if (!profile) return;
+    var els = {
+        bpName: document.getElementById('bpName'),
+        bpTitle: document.getElementById('bpTitle'),
+        bpHours: document.getElementById('bpHours'),
+        bpStreak: document.getElementById('bpStreak'),
+        bpImg: document.getElementById('bpImg'),
+        greeting: document.getElementById('greeting'),
+        userInfo: document.getElementById('userInfoDisplay')
+    };
+    if (els.bpName) els.bpName.innerText = profile.name.toUpperCase();
+    if (els.bpTitle) els.bpTitle.innerText = profile.title;
+    if (els.bpHours) els.bpHours.innerText = flightHours;
+    if (els.bpStreak) els.bpStreak.innerText = streak;
+    if (els.bpImg) {
+        els.bpImg.src = profile.image || 'https://ui-avatars.com/api/?name=' + profile.name + '&background=0D8ABC&color=fff&size=128';    }
+    if (els.greeting) els.greeting.innerText = 'Bem-vindo(a), ' + profile.title + ' ' + profile.name + '.';
+    if (els.userInfo) els.userInfo.innerText = profile.name + ' | ' + profile.title;
+}
+
+// --- PERFIL ---
+async function processImageAndStart() {
+    var name = document.getElementById('inputName').value.trim();
+    var title = document.getElementById('inputTitle').value.trim();
+    var tone = document.getElementById('inputTone').value;
+    var fileInput = document.getElementById('inputImageFile');
+    var bgFileInput = document.getElementById('inputBackgroundFile');
+    
+    if (!name || !title) {
+        showToast('Preencha nome e título!', 'error');
+        return;
+    }
+    
+    showToast('⏳ Processando imagens...', 'info');
+    
+    var profileImage = profile ? profile.image : null;
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+        try {
+            profileImage = await compressImage(fileInput.files[0], 300, 300, 0.8);
+        } catch (e) {
+            console.error(e);
+            showToast('Erro na foto', 'error');
+        }
+    }
+    
+    var backgroundImage = profile ? profile.backgroundImage : null;
+    if (bgFileInput && bgFileInput.files && bgFileInput.files[0]) {
+        try {
+            backgroundImage = await compressImage(bgFileInput.files[0], 800, 800, 0.7);
+        } catch (e) {
+            console.error(e);
+            showToast('Erro no fundo', 'error');
+        }
+    }
+    
+    profile = {
+        name: name,
+        title: title,
+        tone: tone,
+        image: profileImage,
+        backgroundImage: backgroundImage
+    };
+    
+    try {
+        localStorage.setItem('navi_profile', JSON.stringify(profile));    } catch (e) {
+        showToast('Erro: Imagem muito pesada', 'error');
+        return;
+    }
+    
+    document.getElementById('profile-modal').classList.add('hidden');
+    initDashboard();
+    checkStreak();
+    applyBackground();
+    speak('Bem-vindo(a), ' + title + ' ' + name);
+    showToast('Perfil criado!', 'success');
+}
+
+function editProfile() {
+    if (!profile) {
+        showToast('Crie um perfil primeiro!', 'error');
+        return;
+    }
+    document.getElementById('profile-modal').classList.remove('hidden');
+    document.getElementById('inputName').value = profile.name;
+    document.getElementById('inputTitle').value = profile.title;
+    document.getElementById('inputTone').value = profile.tone;
+}
+
+// --- MISSÃO ---
+function newMission() {
+    currentMission = missions[Math.floor(Math.random() * missions.length)];
+    var textEl = document.getElementById('missionText');
+    if (textEl) textEl.innerText = currentMission;
+}
+
+function completeMission() {
+    if (!currentMission) {
+        showToast('Nenhuma missão ativa!', 'error');
+        return;
+    }
+    flightHours += 0.5;
+    localStorage.setItem('navi_hours', flightHours);
+    var bpHours = document.getElementById('bpHours');
+    if (bpHours) bpHours.innerText = flightHours;
+    showToast('✅ Missão cumprida! +0.5h', 'success');
+    speak('Missão cumprida!');
+    closeModal('mission-modal');
+}
+
+// --- POMODORO ---
+function updateTimerDisplay() {
+    var m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    var s = (timeLeft % 60).toString().padStart(2, '0');
+    var el = document.getElementById('timerDisplay');    if (el) el.innerText = m + ':' + s;
+}
+
+function startTimer() {
+    if (timerInterval) return;
+    timerInterval = setInterval(function() {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            flightHours += 0.5;
+            localStorage.setItem('navi_hours', flightHours);
+            var bpHours = document.getElementById('bpHours');
+            if (bpHours) bpHours.innerText = flightHours;
+            showToast('⏱️ Foco concluído! +0.5h', 'success');
+            speak('Tempo de foco concluído!');
+            resetTimer();
+        }
+    }, 1000);
+    showToast('▶️ Timer iniciado', 'info');
+}
+
+function pauseTimer() {
+    clearInterval(timerInterval);
+    timerInterval = null;
+    showToast('⏸️ Pausado', 'info');
+}
+
+function resetTimer() {
+    pauseTimer();
+    timeLeft = 25 * 60;
+    updateTimerDisplay();
+    showToast('🔄 Resetado', 'info');
+}
+
+// --- SONS AMBIENTE ---
+function playSound(type) {
+    stopSound();
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var bufferSize = 2 * audioCtx.sampleRate;
+    var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    var data = buffer.getChannelData(0);
+    var lastOut = 0;
+    
+    for (var i = 0; i < bufferSize; i++) {
+        var white = Math.random() * 2 - 1;
+        if (type === 'white') data[i] = white * 0.5;
+        else if (type === 'brown') { data[i] = (lastOut + (0.02 * white)) / 1.02; lastOut = data[i]; data[i] *= 3.5; }
+        else if (type === 'rain') data[i] = white * 0.5;    }
+    
+    currentNoiseNode = audioCtx.createBufferSource();
+    currentNoiseNode.buffer = buffer;
+    currentNoiseNode.loop = true;
+    
+    var gain = audioCtx.createGain();
+    gain.gain.value = type === 'rain' ? 0.15 : 0.1;
+    
+    if (type === 'rain') {
+        var filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 800;
+        currentNoiseNode.connect(filter).connect(gain).connect(audioCtx.destination);
+    } else {
+        currentNoiseNode.connect(gain).connect(audioCtx.destination);
+    }
+    currentNoiseNode.start();
+    showToast('🔊 Som ' + type + ' ativado', 'info');
+}
+
+function stopSound() {
+    if (currentNoiseNode) { currentNoiseNode.stop(); currentNoiseNode = null; }
+    if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    showToast('🔇 Som desativado', 'info');
+}
+
+// --- RESPIRAÇÃO ---
+function toggleBreathing() {
+    var circle = document.getElementById('breathCircle');
+    var textEl = document.getElementById('breathText');
+    var btn = document.getElementById('breathBtn');
+    
+    if (!isBreathing) {
+        isBreathing = true;
+        if (circle) circle.classList.add('active');
+        if (btn) btn.innerText = '⏹️ Parar';
+        var phase = 0;
+        var phases = ['INSPIRE', 'SEGURE', 'EXPIRE'];
+        if (textEl) textEl.innerText = phases[0];
+        breathingInterval = setInterval(function() {
+            phase = (phase + 1) % 3;
+            if (textEl) textEl.innerText = phases[phase];
+        }, 4000);
+        speak('Respire comigo. Inspire...');
+    } else {
+        isBreathing = false;
+        if (circle) circle.classList.remove('active');
+        if (btn) btn.innerText = '▶️ Iniciar';
+        if (breathingInterval) { clearInterval(breathingInterval); breathingInterval = null; }        speak('Respiração pausada.');
+    }
+}
+
+// --- CHECKLIST ---
+function confirmChecklist() {
+    var items = document.querySelectorAll('#checklistContainer .checklist-item');
+    var checked = 0;
+    items.forEach(function(item) {
+        if (item.classList.contains('checked')) checked++;
+    });
+    showToast('✅ ' + checked + '/' + items.length + ' itens!', 'success');
+    speak('Checklist confirmado!');
+    closeModal('checklist-modal');
+}
+
+// --- ANALYTICS ---
+function renderAnalytics() {
+    var els = {
+        statHours: document.getElementById('statHours'),
+        statMissions: document.getElementById('statMissions'),
+        statStreak: document.getElementById('statStreak')
+    };
+    if (els.statHours) els.statHours.innerText = flightHours;
+    if (els.statMissions) els.statMissions.innerText = Math.floor(flightHours * 2);
+    if (els.statStreak) els.statStreak.innerText = streak;
+
+    var grid = document.getElementById('calendarGrid');
+    if (grid) {
+        grid.innerHTML = '';
+        var days = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+        for (var i = 6; i >= 0; i--) {
+            var d = new Date();
+            d.setDate(d.getDate() - i);
+            var isActive = d.toDateString() === new Date().toDateString();
+            grid.innerHTML += '<div class="cal-day ' + (isActive ? 'active' : '') + '"><span class="day-name">' + days[d.getDay()] + '</span>' + d.getDate() + '</div>';
+        }
+    }
+
+    var ctx = document.getElementById('moodChart');
+    if (ctx && typeof Chart !== 'undefined') {
+        if (moodChartInstance) moodChartInstance.destroy();
+        moodChartInstance = new Chart(ctx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                datasets: [{
+                    label: 'Energia',
+                    data: [3, 4, 2, 5, 4, 5, 3],
+                    borderColor: '#00ff9d',                    backgroundColor: 'rgba(0, 255, 157, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, max: 5 } }
+            }
+        });
+    }
+}
+
+// --- PDF ---
+function generatePDF() {
+    if (typeof window.jspdf === 'undefined') {
+        showToast('jsPDF não carregado', 'error');
+        return;
+    }
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.setTextColor(0, 240, 255);
+    doc.text("NAVI | Relatório de Voo", 105, 20, null, null, "center");
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Comandante: " + profile.name + " (" + profile.title + ")", 20, 40);
+    doc.text("Horas de Voo: " + flightHours + "h", 20, 50);
+    doc.text("Streak: " + streak + " dias", 20, 60);
+    doc.save("NAVI_Relatorio_" + profile.name + ".pdf");
+    showToast('📄 PDF gerado!', 'success');
+}
+
+// --- COMANDO DE VOZ ---
+function processVoiceCommand(command) {
+    console.log('Processando comando:', command);
+    var hotwords = ['navi', 'nave', 'navy', 'naby'];
+    var found = false;
+    var clean = command;
+    
+    for (var i = 0; i < hotwords.length; i++) {
+        if (command.indexOf(hotwords[i]) !== -1) {
+            found = true;
+            clean = command.replace(hotwords[i], '').trim();
+            break;
+        }
+    }
+    
+    if (!found) {        console.log('Hotword não encontrada');
+        return;
+    }
+
+    console.log('Comando limpo:', clean);
+
+    if (clean.indexOf('missão') !== -1 || clean.indexOf('missao') !== -1) {
+        openModal('mission-modal');
+        speak('Missão atribuída');
+    } else if (clean.indexOf('calma') !== -1 || clean.indexOf('respirar') !== -1) {
+        openModal('calm-modal');
+        speak('Modo calma');
+    } else if (clean.indexOf('checklist') !== -1) {
+        openModal('checklist-modal');
+        speak('Checklist');
+    } else if (clean.indexOf('pomodoro') !== -1 || clean.indexOf('foco') !== -1) {
+        openModal('pomodoro-modal');
+        speak('Pomodoro');
+    } else if (clean.indexOf('analytics') !== -1 || clean.indexOf('grafico') !== -1) {
+        openModal('analytics-modal');
+        speak('Analytics');
+    } else if (clean.indexOf('mayday') !== -1 || clean.indexOf('emergencia') !== -1) {
+        triggerMayday();
+        speak('Mayday');
+    } else if (clean.indexOf('claro') !== -1) {
+        if (!isLightMode) toggleTheme();
+    } else if (clean.indexOf('escuro') !== -1) {
+        if (isLightMode) toggleTheme();
+    } else if (clean.indexOf('parar') !== -1 || clean.indexOf('fechar') !== -1) {
+        if (alwaysListening) toggleAlwaysListening();
+        speak('Tchau');
+    } else {
+        showToast('Comando não entendido: ' + clean, 'error');
+    }
+}
+
+// --- ESCUTA PERMANENTE (ALWAYS LISTENING) ---
+function toggleAlwaysListening() {
+    console.log('Toggle always listening, current state:', alwaysListening);
+    var micFab = document.getElementById('micFab');
+    var micLabel = document.getElementById('micLabel');
+    var indicator = document.getElementById('voice-indicator');
+    
+    if (!alwaysListening) {
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            showToast('❌ Navegador não suporta voz', 'error');
+            return;
+        }
+                alwaysRecognition = new SpeechRecognition();
+        alwaysRecognition.lang = 'pt-BR';
+        alwaysRecognition.continuous = true;
+        alwaysRecognition.interimResults = false;
+        
+        alwaysRecognition.onstart = function() {
+            console.log('Reconhecimento de voz iniciado');
+            alwaysListening = true;
+            if (micFab) micFab.classList.add('listening');
+            if (micLabel) micLabel.innerText = 'Ativo';
+            if (indicator) indicator.classList.remove('hidden');
+            showToast('🎙️ Escuta ativada! Diga "NAVI" a qualquer momento.', 'success');
+            speak('Estou ouvindo.');
+        };
+        
+        alwaysRecognition.onresult = function(event) {
+            var command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+            console.log('Resultado de voz:', command);
+            showToast('🎙️ Ouvindo: "' + command + '"', 'info');
+            processVoiceCommand(command);
+        };
+        
+        alwaysRecognition.onerror = function(event) {
+            console.error('Erro de voz:', event.error);
+            if (event.error === 'not-allowed') {
+                showToast('❌ Permissão do microfone negada. Ative nas configurações do navegador.', 'error');
+                alwaysListening = false;
+                if (micFab) micFab.classList.remove('listening');
+                if (micLabel) micLabel.innerText = 'Ativar';
+                if (indicator) indicator.classList.add('hidden');
+            }
+        };
+        
+        alwaysRecognition.onend = function() {
+            console.log('Reconhecimento terminou, sempre ouvindo:', alwaysListening);
+            if (alwaysListening) {
+                try {
+                    setTimeout(function() {
+                        if (alwaysListening && alwaysRecognition) {
+                            alwaysRecognition.start();
+                        }
+                    }, 500);
+                } catch(e) {
+                    console.error('Erro ao reiniciar:', e);
+                }
+            }
+        };
+        
+        try {
+            alwaysRecognition.start();        } catch(e) {
+            console.error('Erro ao iniciar reconhecimento:', e);
+            showToast('Erro ao iniciar voz', 'error');
+        }
+    } else {
+        alwaysListening = false;
+        if (alwaysRecognition) {
+            alwaysRecognition.stop();
+            alwaysRecognition = null;
+        }
+        if (micFab) micFab.classList.remove('listening');
+        if (micLabel) micLabel.innerText = 'Ativar';
+        if (indicator) indicator.classList.add('hidden');
+        showToast('️ Escuta desativada.', 'info');
+        speak('Escuta desativada.');
+    }
+    localStorage.setItem('navi_always_listening', alwaysListening ? 'true' : 'false');
+}
+
+// --- MAYDAY ---
+function triggerMayday() {
+    var overlay = document.getElementById('mayday-overlay');
+    if (overlay) overlay.classList.remove('hidden');
+    speak('Modo emergência. Respire.');
+}
+
+function closeMayday() {
+    var overlay = document.getElementById('mayday-overlay');
+    if (overlay) overlay.classList.add('hidden');
+    speak('Sistemas normalizados.');
+}
+
+// --- INICIALIZAÇÃO ---
+window.addEventListener('DOMContentLoaded', function() {
+    console.log('NAVI v9.4 - DOM carregado');
+    
+    // Atualiza modo do app
+    updateAppMode();
+    
+    // Carrega IA
+    var btn = document.getElementById('btn-start');
+    var statusEl = document.getElementById('ai-status');
+    if (btn && statusEl) {
+        if (typeof mobilenet !== 'undefined') {
+            mobilenet.load({ version: 1, alpha: 0.25 }).then(function() {
+                statusEl.innerText = '✅ IA Pronta!';
+                btn.disabled = false;
+            }).catch(function() {
+                statusEl.innerText = '⚠️ IA falhou. Modo manual.';
+                btn.disabled = false;            });
+        } else {
+            statusEl.innerText = 'MobileNet não disponível.';
+            btn.disabled = false;
+        }
+    }
+    
+    // Se tem perfil, pula modal
+    if (profile) {
+        var modal = document.getElementById('profile-modal');
+        if (modal) modal.classList.add('hidden');
+        initDashboard();
+        checkStreak();
+        applyBackground();
+    }
+    
+    // Banner de instalação
+    if (!isPWAInstalled && localStorage.getItem('navi_install_dismissed') !== 'true') {
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            var banner = document.getElementById('install-banner');
+            if (banner) banner.classList.remove('hidden');
+        });
+    }
+    
+    // Restaura escuta permanente
+    if (localStorage.getItem('navi_always_listening') === 'true') {
+        setTimeout(function() {
+            console.log('Restaurando escuta permanente');
+            toggleAlwaysListening();
+        }, 1000);
+    }
+    
+    // Acordar via notificação
+    var urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('wake') === 'true') {
+        showToast('🔔 NAVI acordado pela notificação!', 'info');
+        speak('Estou aqui. O que precisa?');
+        setTimeout(function() {
+            if (!alwaysListening) toggleAlwaysListening();
+        }, 1500);
+    }
+    
+    console.log('NAVI v9.4 - Inicialização completa');
+});
