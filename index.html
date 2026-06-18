@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NAVI | Co-Piloto Pessoal v9.4</title>
+    <title>NAVI | Co-Piloto Pessoal v1.0 Beta</title>
     
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="apple-touch-icon" href="logo-512.png">
-    <meta name="theme-color" content="#050a14">
+    <link rel="icon" type="image/png" href="img/logo-192.png">
+    <link rel="apple-touch-icon" href="img/logo-512.png">
+    <meta name="theme-color" content="#00f0ff">
     <link rel="manifest" href="manifest.json">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,10 +23,9 @@
 
     <div id="toast-container"></div>
 
-    <!-- 1. Banner de Instalação PWA -->
     <div id="install-banner" class="install-banner hidden">
         <div class="install-content">
-            <span> Instale o NAVI para acesso rápido e modo offline!</span>
+            <span>📲 Instale o NAVI para acesso rápido!</span>
             <button class="btn-install" onclick="installPWA()">Instalar</button>
             <button class="btn-close-banner" onclick="dismissInstall()">✕</button>
         </div>
@@ -35,7 +34,6 @@
     <div class="mayday-btn" onclick="triggerMayday()">🚨 MAYDAY</div>
     <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">☀️</button>
 
-    <!-- 2. Botão Flutuante de Microfone (Always Listening) -->
     <button class="mic-fab" onclick="toggleAlwaysListening()" id="micFab">
         <span class="mic-icon">🎙️</span>
         <span class="mic-label" id="micLabel">Ativar</span>
@@ -43,15 +41,14 @@
 
     <div id="voice-indicator" class="voice-indicator hidden">
         <div class="voice-pulse"></div>
-        <span>🎙️ Ouvindo "NAVI"...</span>
+        <span>🎙️ Ouvindo...</span>
     </div>
 
-    <!-- Overlay MAYDAY -->
-    <div id="mayday-overlay" class="overlay hidden">        <div class="mayday-content">
+    <div id="mayday-overlay" class="overlay hidden">
+        <div class="mayday-content">
             <h1>🚨 MODO EMERGÊNCIA</h1>
-            <p id="mayday-text">Respire fundo. Você está no controle.</p>
-            <div class="grounding-steps">
-                <p>👁️ Nomeie 3 coisas que você vê.</p>
+            <p id="mayday-text">Respire fundo. Você está no controle.</p>            <div class="grounding-steps">
+                <p>️ Nomeie 3 coisas que você vê.</p>
                 <p>✋ Nomeie 2 coisas que você toca.</p>
                 <p>👂 Nomeie 1 coisa que você ouve.</p>
             </div>
@@ -59,44 +56,40 @@
         </div>
     </div>
 
-    <!-- Modal de Perfil -->
     <div id="profile-modal" class="overlay">
         <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
             <h2>🪪 Registro de Identidade</h2>
-            <input type="text" id="inputName" placeholder="Seu nome (ex: Lorena)">
-            <input type="number" id="inputAge" placeholder="Idade (ex: 15)">
-            <input type="text" id="inputTitle" placeholder="Como quer ser chamado? (ex: Princesa, Comandante)">
+            <input type="text" id="inputName" placeholder="Seu nome">
+            <input type="number" id="inputAge" placeholder="Idade">
+            <input type="text" id="inputTitle" placeholder="Como quer ser chamado?">
             <select id="inputTone" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-family: system-ui;">
-                <option value="royal">👑 Real/Elegante</option>
+                <option value="royal"> Real/Elegante</option>
                 <option value="aviator">✈️ Aviador/Tech</option>
                 <option value="casual">😊 Casual/Amigo</option>
                 <option value="coach">💪 Motivacional</option>
                 <option value="formal">🎩 Formal</option>
             </select>
-            
             <p style="font-size: 0.8rem; color: var(--hud-primary); margin: 15px 0 5px;">📸 Foto de Perfil:</p>
             <input type="file" id="inputImageFile" accept="image/*">
-            
-            <p style="font-size: 0.8rem; color: var(--hud-primary); margin: 15px 0 5px;">🖼️ Imagem de Fundo (opcional):</p>
+            <p style="font-size: 0.8rem; color: var(--hud-primary); margin: 15px 0 5px;">🖼️ Imagem de Fundo:</p>
             <input type="file" id="inputBackgroundFile" accept="image/*">
-            
             <div id="ai-status" style="font-size: 0.8rem; color: var(--hud-accent); margin: 10px 0; min-height: 20px;">⏳ Carregando...</div>
             <button class="btn-action" id="btn-start" onclick="processImageAndStart()">Analisar e Iniciar</button>
         </div>
     </div>
 
-    <!-- Modal Pomodoro -->
     <div id="pomodoro-modal" class="overlay hidden">
         <div class="modal-content">
             <h2>⏱️ Modo Foco (Pomodoro)</h2>
             <div class="timer-display" id="timerDisplay">25:00</div>
             <div class="timer-controls">
                 <button class="btn-action" onclick="startTimer()">▶️ Iniciar</button>
-                <button class="btn-close" onclick="pauseTimer()" style="margin-top:0">⏸️ Pausar</button>
+                <button class="btn-close" onclick="pauseTimer()" style="margin-top:0">️ Pausar</button>
                 <button class="btn-close" onclick="resetTimer()" style="margin-top:0">🔄 Resetar</button>
             </div>
             <p style="font-size: 0.8rem; color: #8892b0; margin-top: 15px;">Som ambiente:</p>
-            <div class="sound-grid">                <button class="sound-btn" onclick="playSound('white')">White Noise</button>
+            <div class="sound-grid">
+                <button class="sound-btn" onclick="playSound('white')">White Noise</button>
                 <button class="sound-btn" onclick="playSound('brown')">Brown Noise</button>
                 <button class="sound-btn" onclick="playSound('rain')">Chuva</button>
                 <button class="sound-btn" onclick="stopSound()"> Parar</button>
@@ -104,54 +97,64 @@
             <button class="btn-close" onclick="closeModal('pomodoro-modal')" style="margin-top: 20px;">Fechar</button>
         </div>
     </div>
-
-    <!-- Modal Missão -->
     <div id="mission-modal" class="overlay hidden">
         <div class="modal-content">
-            <h2>🗺️ Plano de Voo</h2>
-            <div class="mission-card" id="missionCard">
+            <h2>️ Plano de Voo</h2>
+            <div class="mission-card">
                 <div class="mission-icon">🎯</div>
                 <p class="mission-text" id="missionText">Sua missão aparecerá aqui...</p>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn-action" onclick="completeMission()" style="flex: 1;">✅ Cumprida</button>
-                <button class="btn-close" onclick="newMission()" style="flex: 1; margin-top:0;"> Nova Missão</button>
+                <button class="btn-close" onclick="newMission()" style="flex: 1; margin-top:0;">🔄 Nova Missão</button>
             </div>
             <button class="btn-close" onclick="closeModal('mission-modal')" style="margin-top: 10px;">Fechar</button>
         </div>
     </div>
 
-    <!-- Modal Controle de Turbulência -->
     <div id="calm-modal" class="overlay hidden">
-        <div class="modal-content">
-            <h2>️ Controle de Turbulência</h2>
-            <p style="font-size: 0.9rem; color: var(--hud-primary); margin: 15px 0;">Respire com o círculo:</p>
-            <div class="breathing-circle" id="breathCircle">
-                <span id="breathText">INSPIRE</span>
+        <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
+            <h2>🌬️ Controle de Turbulência</h2>
+            <p style="font-size: 0.85rem; color: var(--hud-primary); margin: 10px 0;">Escolha a técnica ideal:</p>
+            <div class="breath-techniques" id="breathTechniques"></div>
+            <div id="selectedTechnique" class="selected-technique hidden">
+                <div class="technique-header">
+                    <span class="technique-icon" id="techIcon">🌬️</span>
+                    <div>
+                        <h3 id="techName" style="color: var(--hud-accent); margin: 0;">Técnica</h3>
+                        <span class="technique-badge" id="techBadge">ACALMAR</span>
+                    </div>
+                </div>
+                <p id="techDescription" style="font-size: 0.85rem; color: rgba(255,255,255,0.8); margin: 10px 0; text-align: left;"></p>
+                <div class="breathing-circle" id="breathCircle">
+                    <span id="breathText">INSPIRE</span>
+                </div>
+                <div class="breath-info">
+                    <span id="breathCycle">Ciclo: 0/8</span>
+                    <span id="breathTime">00:00</span>
+                </div>
+                <button class="btn-action" onclick="toggleBreathing()" id="breathBtn">▶️ Iniciar Respiração</button>
+                <button class="btn-close" onclick="backToTechniques()" style="margin-top: 10px;">← Trocar Técnica</button>
             </div>
-            <p style="font-size: 0.8rem; color: #8892b0; margin-top: 15px;">4 segundos inspirando, 4 segurando, 4 expirando</p>
-            <button class="btn-action" onclick="toggleBreathing()" id="breathBtn">▶️ Iniciar Respiração</button>
             <button class="btn-close" onclick="closeModal('calm-modal')" style="margin-top: 10px;">Fechar</button>
         </div>
     </div>
 
-    <!-- Modal Checklist -->
     <div id="checklist-modal" class="overlay hidden">
         <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
             <h2>✅ Checklist de Decolagem</h2>
             <div class="checklist-container" id="checklistContainer">
-                <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>💧 Beber 500ml de água</span></label>
-                <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>️ Aquecimento vocal / Postura</span></label>
-                <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>📱 Celular no modo foco</span></label>
+                <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span> Beber 500ml de água</span></label>
+                <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>🎙️ Aquecimento vocal / Postura</span></label>                <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>📱 Celular no modo foco</span></label>
                 <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>🎯 Objetivo do dia definido</span></label>
                 <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>🧘 5 min de respiração</span></label>
-                <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>📚 Revisar anotações anteriores</span></label>            </div>
+                <label class="checklist-item"><input type="checkbox" onchange="this.parentElement.classList.toggle('checked')"><span>📚 Revisar anotações anteriores</span></label>
+            </div>
             <button class="btn-action" onclick="confirmChecklist()" style="margin-top: 20px;">✅ Confirmar Checklist</button>
             <button class="btn-close" onclick="closeModal('checklist-modal')" style="margin-top: 10px;">Fechar</button>
         </div>
     </div>
 
-    <!-- Modal Analytics -->
     <div id="analytics-modal" class="overlay hidden">
         <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
             <h2>📊 Dashboard de Analytics</h2>
@@ -160,7 +163,7 @@
                 <div class="stat-card"><span class="stat-value" id="statMissions">0</span><span class="stat-label">Missões</span></div>
                 <div class="stat-card"><span class="stat-value" id="statStreak">0</span><span class="stat-label">Dias Seguidos</span></div>
             </div>
-            <h3 style="margin: 20px 0 10px; font-size: 1rem;">📅 Calendário Semanal</h3>
+            <h3 style="margin: 20px 0 10px; font-size: 1rem;"> Calendário Semanal</h3>
             <div class="calendar-grid" id="calendarGrid"></div>
             <h3 style="margin: 20px 0 10px; font-size: 1rem;">📈 Evolução</h3>
             <canvas id="moodChart" height="150"></canvas>
@@ -171,36 +174,36 @@
         </div>
     </div>
 
-    <!-- Modal Comando de Voz -->
     <div id="voice-commands-modal" class="overlay hidden">
         <div class="modal-content" style="max-height: 90vh; overflow-y: auto;">
             <h2>🎙️ Comandos de Voz</h2>
-            <p style="font-size: 0.9rem; color: var(--hud-primary); margin: 15px 0;">Diga <strong>"NAVI"</strong> ou <strong>"NAVE"</strong> seguido do comando:</p>
+            <p style="font-size: 0.9rem; color: var(--hud-primary); margin: 15px 0;">Fale diretamente o comando:</p>
             <div class="voice-commands-list">
-                <div class="voice-command-item"><span class="voice-command-icon">️</span><div><strong>"NAVI missão"</strong><p>Atribui uma nova missão</p></div></div>
-                <div class="voice-command-item"><span class="voice-command-icon">️</span><div><strong>"NAVI calma"</strong><p>Ativa respiração guiada</p></div></div>
-                <div class="voice-command-item"><span class="voice-command-icon">✅</span><div><strong>"NAVI checklist"</strong><p>Abre o checklist</p></div></div>
-                <div class="voice-command-item"><span class="voice-command-icon">⏱️</span><div><strong>"NAVI pomodoro"</strong><p>Abre o modo foco</p></div></div>
-                <div class="voice-command-item"><span class="voice-command-icon">📊</span><div><strong>"NAVI analytics"</strong><p>Abre estatísticas</p></div></div>
-                <div class="voice-command-item"><span class="voice-command-icon">🚨</span><div><strong>"NAVI mayday"</strong><p>Modo emergência</p></div></div>
-                <div class="voice-command-item"><span class="voice-command-icon">🌙</span><div><strong>"NAVI escuro"</strong> ou <strong>"claro"</strong><p>Altera o tema</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">🗺️</span><div><strong>"missão" / "plano de voo"</strong><p>Abre missões</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">⏱️</span><div><strong>"foco" / "pomodoro"</strong><p>Abre timer</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">🌬️</span><div><strong>"respirar" / "calma"</strong><p>Abre respiração</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">✅</span><div><strong>"checklist"</strong><p>Abre checklist</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">📊</span><div><strong>"estatísticas"</strong><p>Abre analytics</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">️</span><div><strong>"perfil"</strong><p>Abre configurações</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">🚨</span><div><strong>"mayday"</strong><p>Modo emergência</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">🌙</span><div><strong>"claro" / "escuro"</strong><p>Altera o tema</p></div></div>
+                <div class="voice-command-item"><span class="voice-command-icon">🔄</span><div><strong>"reset"</strong><p>Reseta o app</p></div></div>
             </div>
             <button class="btn-close" onclick="closeModal('voice-commands-modal')" style="margin-top: 10px;">Fechar</button>
         </div>
     </div>
 
-    <!-- Interface Principal -->
     <div class="cockpit">
-        <header class="hud-header">
-            <div class="status-indicator">
+        <header class="hud-header">            <div class="status-indicator">
                 <span class="dot green"></span> 
-                <span id="appMode">NAVI v9.4</span>            </div>
+                <span id="appMode">NAVI v1.0 Beta</span>
+            </div>
             <div class="user-info-display" id="userInfoDisplay"></div>
             <div id="greeting" class="greeting-text">Aguardando registro...</div>
         </header>
 
         <div class="boarding-pass">
-            <div class="bp-header"><span>BOARDING PASS</span><span class="flight-code">NAVI-V9.4</span></div>
+            <div class="bp-header"><span>BOARDING PASS</span><span class="flight-code">NAVI-V1.0</span></div>
             <div class="bp-body">
                 <div class="bp-avatar"><img id="bpImg" src="" alt="Avatar"></div>
                 <div class="bp-details">
@@ -212,16 +215,17 @@
         </div>
 
         <main class="dashboard">
-            <button class="module-card" onclick="openModal('mission-modal')"><div class="icon">️✈️</div><h3>Plano de Voo</h3></button>
+            <button class="module-card" onclick="openModal('mission-modal')"><div class="icon">🗺️</div><h3>Plano de Voo</h3></button>
             <button class="module-card" onclick="openModal('pomodoro-modal')"><div class="icon">⏱️</div><h3>Modo Foco (Pomodoro)</h3></button>
             <button class="module-card" onclick="openModal('calm-modal')"><div class="icon">🌬️</div><h3>Controle de Turbulência</h3></button>
             <button class="module-card" onclick="openModal('checklist-modal')"><div class="icon">✅</div><h3>Checklist de Decolagem</h3></button>
             <button class="module-card" onclick="openModal('analytics-modal')"><div class="icon">📊</div><h3>Analytics & Calendário</h3></button>
             <button class="module-card" onclick="openModal('voice-commands-modal')"><div class="icon">🎙️</div><h3>Comandos de Voz</h3></button>
             <button class="module-card" onclick="editProfile()"><div class="icon">⚙️</div><h3>Editar Perfil</h3></button>
+            <button class="module-card reset-card" onclick="confirmReset()"><div class="icon">🔄</div><h3>Resetar App</h3></button>
         </main>
 
-        <footer class="hud-footer"><p>NAVI v9.4 | Always Listening Mode</p></footer>
+        <footer class="hud-footer"><p>NAVI v1.0 Beta | Modo Livre</p></footer>
     </div>
     <script src="script.js"></script>
 </body>
